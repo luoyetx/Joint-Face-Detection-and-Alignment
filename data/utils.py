@@ -2,6 +2,7 @@
 
 import os
 import logging
+import cv2
 import numpy as np
 from config import config
 
@@ -19,46 +20,39 @@ def get_dirmapper(dirpath):
 def load_wider():
   '''load wider face dataset
   '''
-  train_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_train/images'))
-  val_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_val/images'))
+  train_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_train', 'images'))
+  val_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_val', 'images'))
 
   def gen(text, mapper):
     fin = open(text, 'r')
 
-    img_paths = []
-    bboxes = []
+    result = []
     while True:
       line = fin.readline()
       if not line: break  # eof
       name = line.strip()
       dir_id = name.split('_')[0]
-      fpath = os.path.join(mapper[dir_id], name + '.jpg')
+      img_path = os.path.join(mapper[dir_id], name + '.jpg')
       face_n = int(fin.readline().strip())
 
-      internal_bboxes = []
+      bboxes = []
       for i in range(face_n):
         line = fin.readline().strip()
         components = line.split(' ')
         x, y, w, h = [float(_) for _ in components]
-
-        # refine bbox
-        size = (w + h) / 2
-        x_center = x + w / 2
-        y_center = y + h / 2
-        x = x_center - size / 2
-        y = y_center - size / 2
-        w = h = size
-        x, y, w, h = int(x), int(y), int(w), int(h)
         bbox = [x, y, w, h]
-        internal_bboxes.append(bbox)
 
-      img_paths.append(fpath)
-      bboxes.append(internal_bboxes)
+        # only large enough
+        if max(w, h) > 12:
+          bboxes.append(bbox)
+
+      result.append([img_path, bboxes])
     fin.close()
-    return (img_paths, bboxes)
+    return result
 
-  train_data = gen('wider_face_train.txt', train_mapper)
-  val_data = gen('wider_face_val.txt', val_mapper)
+  txt_dir = os.path.join(config['data_wider'], 'wider_face_split')
+  train_data = gen(os.path.join(txt_dir, 'wider_face_train.txt'), train_mapper)
+  val_data = gen(os.path.join(txt_dir, 'wider_face_val.txt'), val_mapper)
   return (train_data, val_data)
 
 
@@ -71,9 +65,7 @@ def load_celeba():
   n = int(fin.readline().strip())
   fin.readline()  # drop
 
-  img_paths = []
-  landmarks = []
-  bboxes = []
+  result = []
   for i in range(n):
     line = fin.readline().strip()
     components = line.split()
@@ -94,12 +86,15 @@ def load_celeba():
     bbox = [x_new, y_new, w_new, h_new]
     bbox = [int(_) for _ in bbox]
 
-    img_paths.append(img_path)
-    landmarks.append(landmark)
-    bboxes.append(bbox)
+    # normalize landmark
+    landmark[:, 0] = (landmark[:, 0] - bbox[0]) / bbox[2]
+    landmark[:, 1] = (landmark[:, 1] - bbox[1]) / bbox[3]
+
+    landmark = landmark.reshape(2*len(landmark))
+    result.append([img_path, bbox, landmark])
 
   fin.close()
-  return (img_paths, landmarks, bboxes)
+  return result
 
 
 def calc_IoU(bbox1, bbox2):
@@ -114,6 +109,15 @@ def calc_IoU(bbox1, bbox2):
   return float(area_overlap) / (area1 + area2 - area_overlap)
 
 
+def calc_IoUs(bbox, bboxes):
+  '''calculate IoUs between bbox and bboxes
+  '''
+  IoUs = np.ones(10)
+  for idx, bbox_ in bboxes:
+    IoUs[idx] = calc_IoU(bbox, bbox_)
+  return IoUs
+
+
 def check_bbox(bbox, region):
   '''check the bbox if out of the region
   '''
@@ -123,6 +127,25 @@ def check_bbox(bbox, region):
     return False
   else:
     return True
+
+
+def draw_landmark(img_, bbox, landmark):
+  '''for debug
+  '''
+  img = np.copy(img_)
+  x, y, w, h = bbox
+  cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
+  landmark_n = len(landmark) / 2
+  for i in range(landmark_n):
+    cv2.circle(img, (int(x+w*landmark[2*i]), int(y+h*landmark[2*i+1])), 2, (0, 255, 0), -1)
+  return img
+
+
+def show_image(img):
+  '''for debug
+  '''
+  cv2.imshow('img', img)
+  cv2.waitKey(0)
 
 
 def get_logger(name=None):

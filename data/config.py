@@ -4,11 +4,11 @@ import os
 
 
 # dataDir contains `WIDER`, `CelebA`, `aflw`
-data_dir = '/home/zhangjie/Data/'
+data_dir = os.getcwd()
 # dataWIDER contains `WIDER_train`, `WIDER_val`, `WIDER_test`, `wider_face_split`
-data_wider = os.path.join(data_dir, 'WIDER/')
+data_wider = os.path.join(data_dir, 'WIDER')
 # dataCelebA contains `img_celeba`, `list_landmarks_celeba.txt`
-data_celeba = os.path.join(data_dir, 'CelebA/')
+data_celeba = os.path.join(data_dir, 'CelebA')
 
 config = {
   'data_dir': data_dir,

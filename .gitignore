@@ -1,3 +1,7 @@
-*.lst
-*.rec
+data/CelebA
+data/WIDER
+
+*.mdb
 *.pyc
+*.jpg
+*.png
