@@ -15,15 +15,81 @@
 #include <utility>
 #include "./operator_common.h"
 
+namespace mshadow {
+namespace expr {
+/*!
+ * \breif Special Multiply Exp
+ *  lhs is mask with shape [n, 1], rhs is data with shape [n, m]
+ *  result with shape [n, m], where result[i, j] = lhs[i, 0] * data[i, j]
+ *
+ * \tparam xpu device type
+ * \tparam DType data type
+ */
+template<typename xpu, typename DType>
+struct SpecialMutExp : public Exp<SpecialMutExp<xpu, DType>, DType, type::kChainer> {
+  const Tensor<xpu, 2, DType> &lhs_;
+  const Tensor<xpu, 2, DType> &rhs_;
+  SpecialMutExp(const Tensor<xpu, 2, DType> &lhs, const Tensor<xpu, 2, DType> &rhs)
+    : lhs_(lhs), rhs_(rhs) {}
+};  // struct SpecialMutExp
+
+template<typename xpu, typename DType>
+inline SpecialMutExp<xpu, DType>
+spmt(const Tensor<xpu, 2, DType> &mask,
+     const Tensor<xpu, 2, DType> &data) {
+  return SpecialMutExp<xpu, DType>(mask, data);
+}
+
+template<typename xpu, typename DType>
+struct Plan<SpecialMutExp<xpu, DType>, DType> {
+ public:
+  explicit Plan(const SpecialMutExp<xpu, DType> &e)
+    : lhs_(e.lhs_), rhs_(e.rhs_) {}
+
+  MSHADOW_XINLINE DType Eval(index_t y, index_t x) const {
+    return lhs_[y][0] * rhs_[y][x];
+  }
+
+ private:
+  const Tensor<xpu, 2, DType> &lhs_;
+  const Tensor<xpu, 2, DType> &rhs_;
+};  // struct Plan
+
+template<typename xpu, typename DType>
+inline Plan<SpecialMutExp<xpu, DType>, DType>
+MakePlan(const SpecialMutExp<xpu, DType> &e) {
+  return Plan<SpecialMutExp<xpu, DType>, DType>(e);
+}
+
+template<int dim, typename xpu, typename DType>
+struct ShapeCheck<dim, SpecialMutExp<xpu, DType> > {
+  inline static Shape<dim> Check(const SpecialMutExp<xpu, DType> &e) {
+    CHECK_EQ(dim, 2) << "SpecialMutExp only support 2D";
+    Shape<dim> shape(e.rhs_.shape_);
+    return shape;
+  }
+};  // struct ShapeCheck
+
+template<typename xpu, typename DType>
+struct ExpInfo<SpecialMutExp<xpu, DType> > {
+  static const int kDim = 2;
+  static const int kDevMask = xpu::kDevMask;
+};  // struct ExpInfo
+
+}  // namespace expr
+}  // namespace mshadow
+
 namespace mxnet {
 namespace op {
 
 namespace mi_enum {
-enum MaskIdentityOpInputs {kBBoxRg, kLandmarkRg, kBBoxRgGt, kLandmarkRgGt, kMask};
-enum MaskIdentityOpOutputs {kBBoxRgGtOut, kLandmarkRgGtOut};
+enum MaskIdentityOpInputs {kBBox, kLandmark, kBBoxGt, kLandmarkGt, kBBoxMask, kLandmarkMask};
+enum MaskIdentityOpOutputs {kBBoxGtOut, kLandmarkGtOut};
 }  // namespace mi_enum
 
 struct MaskIdentityParam : public dmlc::Parameter<MaskIdentityParam> {
+  DMLC_DECLARE_PARAMETER(MaskIdentityParam) {
+  }
 };
 
 template<typename xpu, typename DType>
@@ -38,6 +104,20 @@ class MaskIdentityOp : public Operator {
                        const std::vector<TBlob> &aux_args) {
     using namespace mshadow;
     using namespace mshadow::expr;
+    CHECK_EQ(in_data.size(), 6);
+    CHECK_EQ(out_data.size(), 2);
+    Stream<xpu> *s =  ctx.get_stream<xpu>();
+    Tensor<xpu, 2, DType> bbox = in_data[mi_enum::kBBox].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> landmark = in_data[mi_enum::kLandmark].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> bbox_gt = in_data[mi_enum::kBBoxGt].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> landmark_gt = in_data[mi_enum::kLandmarkGt].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> bbox_mask = in_data[mi_enum::kBBoxMask].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> landmark_mask = in_data[mi_enum::kLandmarkMask].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> bbox_gt_refined = out_data[mi_enum::kBBoxGtOut].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> landmark_gt_refined = out_data[mi_enum::kLandmarkGtOut].FlatTo2D<xpu, DType>(s);
+    // refined = mask*rg + gt
+    bbox_gt_refined = spmt<xpu, DType>(bbox_mask, bbox) + bbox_gt;
+    landmark_gt_refined = spmt<xpu, DType>(landmark_mask, landmark) + landmark_gt;
   }
 
   virtual void Backward(const OpContext &ctx,
@@ -64,11 +144,11 @@ Operator* CreateOp(MaskIdentityParam param, int dtype);
 class MaskIdentityProp : public OperatorProperty {
  public:
   std::vector<std::string> ListArguments() const override {
-    return {"bbox_rg", "landmark_rg", "bbox_rg_gt", "landmark_rg_gt", "mask"};
+    return {"bbox", "landmark", "bbox_gt", "landmark_gt", "bbox_mask", "landmark_mask"};
   }
 
   std::vector<std::string> ListOutputs() const override {
-    return {"bbox_rg_gt_refined", "landmark_rg_gt_refined"};
+    return {"bbox_gt_refined", "landmark_gt_refined"};
   }
 
   void Init(const std::vector<std::pair<std::string, std::string> >& kwargs) override {
@@ -83,7 +163,7 @@ class MaskIdentityProp : public OperatorProperty {
                   std::vector<TShape> *out_shape,
                   std::vector<TShape> *aux_shape) const override {
     using namespace mshadow;
-    CHECK_EQ(in_shape->size(), 5) << "Input:[bbox_rg, landmark_rg, bbox_rg_gt, landmark_rg_gt, mask]";
+    CHECK_EQ(in_shape->size(), 6) << "Input:[bbox, landmark, bbox_gt, landmark_gt, bbox_mask, landmark_mask]";
     const TShape &shape1 = in_shape->at(0);
     const TShape &shape2 = in_shape->at(1);
     if (shape1.ndim() == 0 || shape2.ndim() == 0) return false;
@@ -121,8 +201,8 @@ class MaskIdentityProp : public OperatorProperty {
   std::vector<std::pair<int, void*> > ForwardInplaceOption(
     const std::vector<int> &in_data,
     const std::vector<void*> &out_data) const override {
-    return {{in_data[kBBoxRgGt], out_data[kBBoxRgGtOut]},
-            {in_data[kLandmarkRgGt], out_data[kLandmarkRgGtOut]}};
+    return {{in_data[mi_enum::kBBoxGt], out_data[mi_enum::kBBoxGtOut]},
+            {in_data[mi_enum::kLandmarkGt], out_data[mi_enum::kLandmarkGtOut]}};
   }
 
   Operator* CreateOperator(Context ctx) const override {

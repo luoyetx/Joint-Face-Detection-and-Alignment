@@ -60,7 +60,7 @@ def get_model(net='p'):
   return output
 
 
-def add_loss(model):
+def add_loss(model, ws=[1.0, 1.0, 1.0]):
   '''add loss
   '''
   mask = mx.sym.Variable('mask')
@@ -71,9 +71,9 @@ def add_loss(model):
 
   gt_refined = mx.sym.MaskIdentity(*[bbox_rg, landmark_rg, \
                                      bbox_rg_gt, landmark_rg_gt, mask])
-  output1 = mx.sym.SoftmaxOutput(data=face_cls, label=face_cls_gt)
-  output2 = mx.sym.LinearRegressionOutput(data=bbox_rg, label=gt_refined[0])
-  otuput3 = mx.sym.LinearRegressionOutput(data=landmark_rg, label=gt_refined[1])
+  output1 = mx.sym.SoftmaxOutput(data=face_cls, label=face_cls_gt, grad_scale=ws[0])
+  output2 = mx.sym.LinearRegressionOutput(data=bbox_rg, label=gt_refined[0], grad_scale=ws[1])
+  otuput3 = mx.sym.LinearRegressionOutput(data=landmark_rg, label=gt_refined[1], grad_scale=ws[2])
   output = mx.sym.Group([output1, output2, output3])
   return output
 
