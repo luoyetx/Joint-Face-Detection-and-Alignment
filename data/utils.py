@@ -1,3 +1,4 @@
+#!/usr/bin/env python2.7
 # coding = utf-8
 
 import os
@@ -8,8 +9,8 @@ from config import config
 
 
 def get_dirmapper(dirpath):
-  '''return dir mapper for wider face
-  '''
+  """return dir mapper for wider face
+  """
   mapper = {}
   for d in os.listdir(dirpath):
     dir_id = d.split('--')[0]
@@ -18,8 +19,8 @@ def get_dirmapper(dirpath):
 
 
 def load_wider():
-  '''load wider face dataset
-  '''
+  """load wider face dataset
+  """
   train_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_train', 'images'))
   val_mapper = get_dirmapper(os.path.join(config['data_wider'], 'WIDER_val', 'images'))
 
@@ -57,9 +58,9 @@ def load_wider():
 
 
 def load_celeba():
-  '''load celeba dataset and crop the face bbox
+  """load celeba dataset and crop the face bbox
   notice: the face bbox may out of the image range
-  '''
+  """
   text = os.path.join(config['data_celeba'], 'list_landmarks_celeba.txt')
   fin = open(text, 'r')
   n = int(fin.readline().strip())
@@ -98,8 +99,8 @@ def load_celeba():
 
 
 def calc_IoU(bbox1, bbox2):
-  '''calculate IoU of bbox1 and bbox2
-  '''
+  """calculate IoU of bbox1 and bbox2
+  """
   area1 = bbox1[2] * bbox1[3]
   area2 = bbox2[2] * bbox2[3]
   x1, y1 = max(bbox1[0], bbox2[0]), max(bbox1[1], bbox2[1])
@@ -110,8 +111,8 @@ def calc_IoU(bbox1, bbox2):
 
 
 def calc_IoUs(bbox, bboxes):
-  '''calculate IoUs between bbox and bboxes
-  '''
+  """calculate IoUs between bbox and bboxes
+  """
   IoUs = np.ones(10)
   for idx, bbox_ in bboxes:
     IoUs[idx] = calc_IoU(bbox, bbox_)
@@ -119,8 +120,8 @@ def calc_IoUs(bbox, bboxes):
 
 
 def check_bbox(bbox, region):
-  '''check the bbox if out of the region
-  '''
+  """check the bbox if out of the region
+  """
   x, y, w, h = bbox
   height, width = region
   if x < 0 or y < 0 or x+w-1 >= width or y+h-1 >= height:
@@ -130,8 +131,8 @@ def check_bbox(bbox, region):
 
 
 def draw_landmark(img_, bbox, landmark):
-  '''for debug
-  '''
+  """for debug
+  """
   img = np.copy(img_)
   x, y, w, h = bbox
   cv2.rectangle(img, (x, y), (x+w, y+h), (0, 0, 255), 2)
@@ -142,15 +143,15 @@ def draw_landmark(img_, bbox, landmark):
 
 
 def show_image(img):
-  '''for debug
-  '''
+  """for debug
+  """
   cv2.imshow('img', img)
   cv2.waitKey(0)
 
 
 def get_logger(name=None):
-  '''return a logger
-  '''
+  """return a logger
+  """
   logger = logging.getLogger(name)
   logger.setLevel(logging.INFO)
   sh = logging.StreamHandler()

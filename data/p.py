@@ -32,13 +32,13 @@ def fill_queues(data, qs):
 
 
 def face_region_proposal(region, face_gt_bboxes, overlap_th):
-  '''generate bbox with overlap larger than overlap_th between any of bboxes
+  """generate bbox with overlap larger than overlap_th between any of bboxes
   :param region: [height, width]
   :param face_gt_bboxes: ground truth bboxes
   :param overlap_th: overlap threshold
   :return face_bboxes: proposal face bboxes
   :return face_offsets: offset between proposal face bboxes and ground truth bbox
-  '''
+  """
   face_bboxes = []
   face_offsets = []
 
@@ -74,8 +74,8 @@ def face_region_proposal(region, face_gt_bboxes, overlap_th):
 
 
 def apply_offset(bbox, offset):
-    '''reverse, for debug
-    '''
+    """reverse, for debug
+    """
     x, y, w, h = bbox
     dx, dy, dw, dh = offset
     w_ = w*dw
@@ -97,8 +97,8 @@ def face_reader_func(q_in, q_out):
       face = img[y:y+h, x:x+w, :]
       face = cv2.resize(face, (12, 12))
       face = face.transpose(2, 0, 1)
-      face_data = face.tostring()
-      offset_data = np.asarray(offset).tostring()
+      face_data = face.tostring()  # uint8
+      offset_data = np.asarray(offset, dtype=np.float32).tostring()
       q_out.put(('data', [face_data, offset_data]))
     #   # reverse
     #   rbbox = apply_offset(bbox, offset)
@@ -129,8 +129,8 @@ def face_writer_func(q_out, db_name):
 
 
 def gen_face():
-  '''generate face data with bbox
-  '''
+  """generate face data with bbox
+  """
   logger.info('loading WIDER')
   train_data, val_data = load_wider()
   random.shuffle(train_data)
@@ -172,8 +172,8 @@ def landmark_reader_func(q_in, q_out):
     face = img[y:y+h, x:x+w, :]  # crop
     face = cv2.resize(face, (12, 12))
     face = face.transpose(2, 0, 1)
-    face_data = face.tostring()  # string for lmdb
-    landmark_data = landmark.tostring()
+    face_data = face.tostring()  # string for lmdb, uint8
+    landmark_data = landmark.tostring()  # float32
     q_out.put(('data', [face_data, landmark_data]))
 
 
@@ -198,8 +198,8 @@ def landmark_writer_func(q_out, db_name):
 
 
 def gen_landmark():
-  '''generate face data with landmark
-  '''
+  """generate face data with landmark
+  """
   logger.info('loading CelebA')
   data = load_celeba()
   logger.info('total images %d', len(data))

@@ -1,11 +1,12 @@
+#!/usr/bin/env python2.7
 # coding = utf-8
 
 import mxnet as mx
 
 
 def get_model(net='p'):
-  '''get model for P-Net, R-Net, O-Net
-  '''
+  """get model for P-Net, R-Net, O-Net
+  """
   data = mx.sym.Variable('data')
   if net == 'p':
     conv1 = mx.sym.Convolution(data=data, kernel=(3, 3), pad=(1, 1), num_filter=10, name='conv1')
@@ -61,8 +62,8 @@ def get_model(net='p'):
 
 
 def add_loss(model, ws=[1.0, 1.0, 1.0]):
-  '''add loss
-  '''
+  """add loss
+  """
   mask = mx.sym.Variable('mask')
   face_cls_gt = mx.sym.Variable('face')
   bbox_rg_gt = mx.sym.Variable('bbox')
