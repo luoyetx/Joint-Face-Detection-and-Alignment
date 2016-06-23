@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 # coding = utf-8
 
+import Queue
 import multiprocessing
 import cv2
 import lmdb
@@ -11,8 +12,8 @@ from data.utils import calc_IoU
 
 
 NONFACE_VERLAP_THRESHOLD = 0.3
-BATCH_QUEUE_LEN = 3
-batch_queue = multiprocessing.Queue(BATCH_QUEUE_LEN)
+BATCH_QUEUE_LEN = 10
+batch_queue = multiprocessing.Queue(BATCH_QUEUE_LEN)  # used for batches
 
 
 class FaceDataGenerator(object):
@@ -278,6 +279,11 @@ class BatchGenerator(object):
     self.mask_shape = 2
     self.mask_data = np.zeros((self.batch_size, 2), dtype=np.float32)
 
+  def finalize(self):
+    del self.face_generator
+    del self.landmark_generator
+    del self.nonface_generator
+
   def run(self):
     """generate one batch, data layout [face, landmark, nonface]
     :return data: data in a batch
@@ -306,7 +312,9 @@ class BatchGenerator(object):
     self.bbox_data[start:end].fill(0)
     self.landmark_data[start:end].fill(0)
     self.mask_data[start:end] = mask_data
-    return (self.data, self.bbox_data, self.landmark_data, self.mask_data)
+    # copy it
+    return (self.data.copy(), self.bbox_data.copy(),
+            self.landmark_data.copy(), self.mask_data.copy())
 
   def next_face_data(self):
     """generate face data in a batch
@@ -333,22 +341,62 @@ class BatchGenerator(object):
         yield batch  # nonface_data, mask_data
 
 
+def bgt_wrapper(bq, kwargs):
+  """wrap BatchGenerator for Process target,
+  """
+  bgt = BatchGenerator(**kwargs)
+  while True:
+    batch = bgt.run()
+    bq.put(batch)
+  # will never come here, need a way to safely shut down
+  # but the resource will still release through method __del__
+  bgt.finalize()
+
+
 class MTDataIter(mx.io.DataIter):
   """Multi-task DataIter
   """
 
-  def __init__(self, net_type='p', batch_sizes=[256, 256, 512]):
+  def __init__(self, net_type='p', is_train=True,
+               shuffle=False, epoch_size=1000,
+               batch_sizes=[256, 256, 512]):
     """init the data iter
     :param net_type: 'p' or 'r' or 'o' for 3 nets
     :param batch_sizes: 3 batch_sizes for face, landmark, non-face
     """
     super(MTDataIter, self).__init__()
+    assert net_type in ['p', 'r', 'o']
     self.net_type = net_type
     self.face_batch_size = batch_sizes[0]
     self.landmark_batch_size = batch_sizes[1]
     self.nonface_batch_size = batch_sizes[2]
-    if net_type == 'p':
-      pass
+    data_type = 'train' if is_train else 'val'
+    face_db_name = 'data/%snet_face_%s'%(net_type, data_type)
+    landmark_db_name = 'data/%snet_landmark_%s'%(net_type, data_type)
+    train_list, val_list = load_wider()
+    nonface_bgs = train_list if is_train else val_list
+    kwargs = {
+      'net_type': net_type,
+      'shuffle': shuffle,
+      'face_db_name': face_db_name,
+      'landmark_db_name': landmark_db_name,
+      'nonface_bgs': nonface_bgs,
+      'face_batch_size': batch_sizes[0],
+      'landmark_batch_size': batch_sizes[1],
+      'nonface_batch_size': batch_sizes[2],
+    }
+
+    self.generator = multiprocessing.Process(target=bgt_wrapper,
+                                             args=(batch_queue, kwargs))
+    self.generator.start()
+
+  def finalize(self):
+    # forcely shut down
+    self.generator.terminate()
+
+  def get_one_batch(self):
+    batch = batch_queue.get()
+    return batch
 
 
 if __name__ == '__main__':
@@ -379,3 +427,13 @@ if __name__ == '__main__':
   for i in range(epoch_size):
     print 'batch', i
     bgt.run()
+  bgt.finalize()
+  # test MTDataIter
+  data_iter = MTDataIter()
+  batch = data_iter.get_one_batch()
+  assert batch[0].shape == (1024, 3, 12, 12)
+  assert batch[1].shape == (1024, 4)
+  assert batch[2].shape == (1024, 10)
+  assert batch[3].shape == (1024, 2)
+  batch = data_iter.get_one_batch()
+  data_iter.finalize()

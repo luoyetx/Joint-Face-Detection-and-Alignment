@@ -4,7 +4,7 @@
 import mxnet as mx
 
 
-def get_model(net='p'):
+def get_model(net='p', is_train=True):
   """get model for P-Net, R-Net, O-Net
   """
   data = mx.sym.Variable('data')
@@ -17,9 +17,18 @@ def get_model(net='p'):
     conv3 = mx.sym.Convolution(data=relu2, kernel=(3, 3), num_filter=32, name='conv3')
     relu3 = mx.sym.Activation(data=conv3, act_type='relu', name='relu3')
     # output
-    face_cls = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=2, name='face_cls')
-    bbox_rg = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=4, name='bbox_rg')
-    landmark_rg = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=10, name='landmark_rg')
+    if is_train:
+      # during training, reshape Kx1x1 to K
+      face_cls_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=2, name='face_cls_')
+      face_cls = mx.sym.Flatten(data=face_cls_, name='face_cls')
+      bbox_rg_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=4, name='bbox_rg_')
+      bbox_rg = mx.sym.Flatten(data=bbox_rg_, name='bbox_rg')
+      landmark_rg_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=10, name='landmark_rg_')
+      landmark_rg = mx.sym.Flatten(data=landmark_rg_, name='landmark_rg')
+    else:
+      face_cls = mx.sym.FullyConnected(data=relu4, num_hidden=2, name='face_cls')
+      bbox_rg = mx.sym.FullyConnected(data=relu4, num_hidden=4, name='bbox_rg')
+      landmark_rg = mx.sym.FullyConnected(data=relu4, num_hidden=10, name='landmark_rg')
   elif net == 'r':
     conv1 = mx.sym.Convolution(data=data, kernel=(3, 3), pad=(1, 1), num_filter=28, name='conv1')
     relu1 = mx.sym.Activation(data=conv1, act_type='relu', name='relu1')
@@ -81,3 +90,4 @@ def add_loss(model, ws=[1.0, 1.0, 1.0]):
 
 if __name__ == '__main__':
   p = get_model('p')
+  pl = add_loss(p, is_train=True)
