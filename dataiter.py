@@ -1,7 +1,6 @@
 #!/usr/bin/env python2.7
 # coding = utf-8
 
-import Queue
 import multiprocessing
 import cv2
 import lmdb
@@ -11,7 +10,7 @@ from data.utils import load_wider
 from data.utils import calc_IoU
 
 
-NONFACE_VERLAP_THRESHOLD = 0.3
+NONFACE_OVERLAP_THRESHOLD = 0.3
 BATCH_QUEUE_LEN = 10
 batch_queue = multiprocessing.Queue(BATCH_QUEUE_LEN)  # used for batches
 
@@ -227,7 +226,7 @@ class NonFaceDataGenerator(object):
       nonface_bbox = [x, y, w, h]
       use_it = True
       for face_bbox in face_bboxes:
-        if calc_IoU(nonface_bbox, face_bbox) > NONFACE_VERLAP_THRESHOLD:
+        if calc_IoU(nonface_bbox, face_bbox) > NONFACE_OVERLAP_THRESHOLD:
           use_it = False
           break
       if use_it:
@@ -272,6 +271,8 @@ class BatchGenerator(object):
       assert net_type == 'o'
       self.data_shape = (3, 48, 48)
       self.data = np.zeros((self.batch_size, 3, 48, 48), dtype=np.float32)
+    self.face_shape = 1
+    self.face_data = np.zeros((self.batch_size, 1), dtype=np.float32)
     self.bbox_shape = 4
     self.bbox_data = np.zeros((self.batch_size, 4), dtype=np.float32)
     self.landmark_shape = 10
@@ -313,8 +314,9 @@ class BatchGenerator(object):
     self.landmark_data[start:end].fill(0)
     self.mask_data[start:end] = mask_data
     # copy it
-    return (self.data.copy(), self.bbox_data.copy(),
-            self.landmark_data.copy(), self.mask_data.copy())
+    return (self.data.copy(), self.face_data.copy(),
+            self.bbox_data.copy(), self.landmark_data.copy(),
+            self.mask_data[:, 0].copy(), self.mask_data[:, 1].copy())
 
   def next_face_data(self):
     """generate face data in a batch
@@ -370,6 +372,7 @@ class MTDataIter(mx.io.DataIter):
     self.face_batch_size = batch_sizes[0]
     self.landmark_batch_size = batch_sizes[1]
     self.nonface_batch_size = batch_sizes[2]
+    self.batch_size = reduce(lambda acc, x: acc+x, batches, 0)
     data_type = 'train' if is_train else 'val'
     face_db_name = 'data/%snet_face_%s'%(net_type, data_type)
     landmark_db_name = 'data/%snet_landmark_%s'%(net_type, data_type)
@@ -389,14 +392,75 @@ class MTDataIter(mx.io.DataIter):
     self.generator = multiprocessing.Process(target=bgt_wrapper,
                                              args=(batch_queue, kwargs))
     self.generator.start()
+    self.current_batch_idx = 0
+    self.epoch_size = epoch_size
+    self.reset()
+
+    if net_type == 'p':
+      self.data_shape =  (self.batch_size, 3, 12, 12)
+    elif net_type == 'r':
+      self.data_shape = (self.batch_size, 3, 24, 24)
+    else:
+      self.data_shape = (self.batch_size, 3, 48, 48)
+    self.face_shape = (self.batch_size, 1)
+    self.bbox_shape = (self.batche_size, 4)
+    self.landmark_shape = (self.batch_size, 10)
+    self.bbox_mask_shape = (self.batch_size, 1)
+    self.landmark_mask_shape = (self.batch_sizes, 1)
 
   def finalize(self):
     # forcely shut down
     self.generator.terminate()
 
   def get_one_batch(self):
+    """for debug
+    """
     batch = batch_queue.get()
     return batch
+
+  def reset(self):
+    self.current_batch_idx = 0
+
+  def iter_next(self):
+    if self.current_batch_idx >= self.epoch_size:
+      return False
+    self.batch = batch_queue.get()
+    self.data = {
+      'data': self.batch[0],
+    }
+    self.label = {
+      'face': self.batch[1],
+      'bbox': self.batch[2],
+      'landmark': self.batch[3],
+      'bbox_mask': self.batch[4],
+      'landmark_mask': self.batch[5],
+    }
+    self.current_batch_idx += 1
+    return True
+
+  def getdata(self):
+    return self.data
+
+  def getlabel(self):
+    return self.label
+
+  def getindex(self):
+    return self.current_batch_idx
+
+  def getpad(self):
+    return 0
+
+  @property
+  def provide_data(self):
+    return [('data', self.data_shape)]
+
+  @property
+  def provide_label(self):
+    return [('face', self.face_shape),
+            ('bbox', self.bbox_shape),
+            ('landmark', self.landmark_shape),
+            ('bbox_mask', self.bbox_mask_shape),
+            ('landmark_mask', self.landmark_mask_shape)]
 
 
 if __name__ == '__main__':
@@ -413,7 +477,7 @@ if __name__ == '__main__':
   print nonface_data, mask_data
   # test iteration
   for idx, batch in enumerate(face_generator):
-    print idx
+    print 'batch', idx
     if idx > 10: break
   # test BatchGenerator
   bgt = BatchGenerator(net_type='p', shuffle=True,
@@ -429,11 +493,19 @@ if __name__ == '__main__':
     bgt.run()
   bgt.finalize()
   # test MTDataIter
-  data_iter = MTDataIter()
+  data_iter = MTDataIter(epoch_size=30)
   batch = data_iter.get_one_batch()
-  assert batch[0].shape == (1024, 3, 12, 12)
-  assert batch[1].shape == (1024, 4)
-  assert batch[2].shape == (1024, 10)
-  assert batch[3].shape == (1024, 2)
+  print 'get one'
+  assert batch[0].shape == (1024, 3, 12, 12)  # data
+  assert batch[1].shape == (1024, 1)  # face cls
+  assert batch[2].shape == (1024, 4)  # bbox rg
+  assert batch[3].shape == (1024, 10)  # landmark rg
+  assert batch[4].shape == (1024, 1)  # bbox mask
+  assert batch[5].shape == (1024, 1)  # landmark mask
   batch = data_iter.get_one_batch()
+  print 'get one'
+  # test MTDataIter
+  data_iter.reset()
+  for idx, batch in enumerate(data_iter):
+    print 'batch', idx
   data_iter.finalize()
