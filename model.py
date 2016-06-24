@@ -20,10 +20,10 @@ def get_model(net='p', is_train=True):
     if is_train:
       # during training, reshape Kx1x1 to K
       face_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=2, name='face_')
-      face = mx.sym.Flatten(data=face_, name='face')
       bbox_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=4, name='bbox_')
-      bbox = mx.sym.Flatten(data=bbox_, name='bbox')
       landmark_ = mx.sym.Convolution(data=relu3, kernel=(1, 1), num_filter=10, name='landmark_')
+      face = mx.sym.Flatten(data=face_, name='face')
+      bbox = mx.sym.Flatten(data=bbox_, name='bbox')
       landmark = mx.sym.Flatten(data=landmark_, name='landmark')
     else:
       face = mx.sym.FullyConnected(data=relu4, num_hidden=2, name='face')
@@ -86,7 +86,6 @@ def add_loss(model, ws=[1.0, 1.0, 1.0]):
                                     mask=bbox_mask, name='bbox_gt_ref')
   landmark_gt_ref = mx.sym.MaskIdentity(data=landmark, label=landmark_gt,
                                         mask=landmark_mask, name='landmark_gt_ref')
-  print landmark_gt_ref.name
   output1 = mx.sym.SoftmaxOutput(data=face, label=face_gt, grad_scale=ws[0], name='output1')
   output2 = mx.sym.LinearRegressionOutput(data=bbox, label=bbox_gt_ref, grad_scale=ws[1], name='output2')
   output3 = mx.sym.LinearRegressionOutput(data=landmark, label=landmark_gt_ref, grad_scale=ws[2], name='output3')
