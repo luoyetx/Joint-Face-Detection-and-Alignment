@@ -142,7 +142,8 @@ class MaskIdentityProp : public OperatorProperty {
   }
 
   std::vector<std::string> ListOutputs() const override {
-    return {"label_out"};
+    // mx.viz.plot_network() doesn't support multi output nor custom output name like `label_out`
+    return {"output"};
   }
 
   void Init(const std::vector<std::pair<std::string, std::string> >& kwargs) override {
