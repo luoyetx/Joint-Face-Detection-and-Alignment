@@ -29,11 +29,9 @@ Operator *MaskIdentityProp::CreateOperatorEx(Context ctx, std::vector<TShape> *i
 DMLC_REGISTER_PARAMETER(MaskIdentityParam);
 
 MXNET_REGISTER_OP_PROPERTY(MaskIdentity, MaskIdentityProp)
-.describe("Dynamicly fill missing gt labels by mask")
-.add_argument("bbox_rg", "Symbol", "BBox regression output from network")
-.add_argument("landmark_rg", "Symbol", "Landmark regression output from network")
-.add_argument("bbox_rg_gt", "Symbol", "BBox regression ground truth")
-.add_argument("landmark_rg_gt", "Symbol", "Landmark regression ground truth")
+.describe("Dynamicly fill missing labels by mask")
+.add_argument("data", "Symbol", "Reference Data")
+.add_argument("label", "Symbol", "Labels that may have missing values")
 .add_argument("mask", "Symbol", "Mask to fill or not")
 .add_arguments(MaskIdentityParam::__FIELDS__());
 

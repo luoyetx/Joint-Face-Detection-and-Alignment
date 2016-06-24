@@ -73,25 +73,23 @@ def get_model(net='p', is_train=True):
 def add_loss(model, ws=[1.0, 1.0, 1.0]):
   """add loss
   """
-  face_cls_gt = mx.sym.Variable('face')
-  bbox_rg_gt = mx.sym.Variable('bbox')
-  landmark_rg_gt = mx.sym.Variable('landmark')
+  face_gt = mx.sym.Variable('face')
+  bbox_gt = mx.sym.Variable('bbox')
+  landmark_gt = mx.sym.Variable('landmark')
   bbox_mask = mx.sym.Variable('bbox_mask')
   landmark_mask = mx.sym.Variable('landmark_mask')
-  face_cls, bbox_rg, landmark_rg = model[0], model[1], model[2]
+  face, bbox, landmark = model[0], model[1], model[2]
 
-  # gt_refined = mx.sym.MaskIdentity(*[bbox_rg, landmark_rg,
-  #                                    bbox_rg_gt, landmark_rg_gt,
-  #                                    bbox_mask, landmark_mask],
-  #                                  name='mask_identity')
-  gt_refined = mx.sym.MaskIdentity(bbox=bbox_rg, landmark=landmark_rg,
-                                   bbox_gt=bbox_rg_gt, landmark_gt=landmark_rg_gt,
-                                   bbox_mask=bbox_mask, landmark_mask=landmark_mask,
-                                   name=('gt_refined'))
-  print gt_refined[0].name, gt_refined[1].name
-  output1 = mx.sym.SoftmaxOutput(data=face_cls, label=face_cls_gt, grad_scale=ws[0], name='output1')
-  output2 = mx.sym.LinearRegressionOutput(data=bbox_rg, label=gt_refined[0], grad_scale=ws[1], name='output2')
-  output3 = mx.sym.LinearRegressionOutput(data=landmark_rg, label=gt_refined[1], grad_scale=ws[2], name='output3')
+  # bbox_gt_ref = mx.sym.MaskIdentity(*[bbox, bbox_gt, bbox_mask], name='bbox_gt_ref')
+  # landmark_gt_ref = mx.sym.MaskIdentity(*[landmark, landmark_gt, landmark_gt], name='landmark_gt_ref')
+  bbox_gt_ref = mx.sym.MaskIdentity(data=bbox, label=bbox_gt,
+                                    mask=bbox_mask, name='bbox_gt_ref')
+  landmark_gt_ref = mx.sym.MaskIdentity(data=landmark, label=landmark_gt,
+                                        mask=landmark_gt, name='landmark_gt_ref')
+
+  output1 = mx.sym.SoftmaxOutput(data=face, label=face_gt, grad_scale=ws[0], name='output1')
+  output2 = mx.sym.LinearRegressionOutput(data=bbox, label=bbox_gt_ref, grad_scale=ws[1], name='output2')
+  output3 = mx.sym.LinearRegressionOutput(data=landmark, label=landmark_gt_ref, grad_scale=ws[2], name='output3')
   output = mx.sym.Group([output1, output2, output3])
   return output
 

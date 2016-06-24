@@ -11,8 +11,8 @@ def main():
   landmark_gt = mx.sym.Variable('landmark_gt')
   bbox_mask = mx.sym.Variable('bbox_mask')
   landmark_mask = mx.sym.Variable('landmark_mask')
-  refined = mx.sym.MaskIdentity(*[bbox, landmark, bbox_gt, landmark_gt, bbox_mask, landmark_mask])
-  bbox_gt_refined, landmark_gt_refined = refined[0], refined[1]
+  bbox_gt_refined = mx.sym.MaskIdentity(data=bbox, label=bbox_gt, mask=bbox_mask)
+  landmark_gt_refined = mx.sym.MaskIdentity(data=landmark, label=landmark_gt, mask=landmark_mask)
   output = mx.sym.Group([bbox_gt_refined, landmark_gt_refined])
 
   bbox_a = mx.nd.array(np.array([[1, 2, 3, 4],
@@ -43,7 +43,13 @@ def main():
   executor.forward()
   output_a = executor.outputs
   bbox_gt_refined_a, landmark_gt_refined_a = output_a[0], output_a[1]
+  print 'bbox_gt'
+  print bbox_gt_a.asnumpy()
+  print 'bbox_gt_refined'
   print bbox_gt_refined_a.asnumpy()
+  print 'landmark_gt'
+  print landmark_gt_a.asnumpy()
+  print 'landmark_gt_refined'
   print landmark_gt_refined_a.asnumpy()
   # test on gpu
   print 'test on gpu'
@@ -52,7 +58,13 @@ def main():
   executor.forward()
   output_a = executor.outputs
   bbox_gt_refined_a, landmark_gt_refined_a = output_a[0], output_a[1]
+  print 'bbox_gt'
+  print bbox_gt_a.asnumpy()
+  print 'bbox_gt_refined'
   print bbox_gt_refined_a.asnumpy()
+  print 'landmark_gt'
+  print landmark_gt_a.asnumpy()
+  print 'landmark_gt_refined'
   print landmark_gt_refined_a.asnumpy()
 
 

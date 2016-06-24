@@ -83,8 +83,8 @@ namespace mxnet {
 namespace op {
 
 namespace mi_enum {
-enum MaskIdentityOpInputs {kBBox, kLandmark, kBBoxGt, kLandmarkGt, kBBoxMask, kLandmarkMask};
-enum MaskIdentityOpOutputs {kBBoxGtOut, kLandmarkGtOut};
+enum MaskIdentityOpInputs {kData, kLabel, kMask};
+enum MaskIdentityOpOutputs {kLabelOut};
 }  // namespace mi_enum
 
 struct MaskIdentityParam : public dmlc::Parameter<MaskIdentityParam> {
@@ -104,20 +104,14 @@ class MaskIdentityOp : public Operator {
                        const std::vector<TBlob> &aux_args) {
     using namespace mshadow;
     using namespace mshadow::expr;
-    CHECK_EQ(in_data.size(), 6);
-    CHECK_EQ(out_data.size(), 2);
+    CHECK_EQ(in_data.size(), 3);
+    CHECK_EQ(out_data.size(), 1);
     Stream<xpu> *s =  ctx.get_stream<xpu>();
-    Tensor<xpu, 2, DType> bbox = in_data[mi_enum::kBBox].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> landmark = in_data[mi_enum::kLandmark].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> bbox_gt = in_data[mi_enum::kBBoxGt].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> landmark_gt = in_data[mi_enum::kLandmarkGt].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> bbox_mask = in_data[mi_enum::kBBoxMask].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> landmark_mask = in_data[mi_enum::kLandmarkMask].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> bbox_gt_refined = out_data[mi_enum::kBBoxGtOut].FlatTo2D<xpu, DType>(s);
-    Tensor<xpu, 2, DType> landmark_gt_refined = out_data[mi_enum::kLandmarkGtOut].FlatTo2D<xpu, DType>(s);
-    // refined = mask*rg + gt
-    bbox_gt_refined = spmt<xpu, DType>(bbox_mask, bbox) + bbox_gt;
-    landmark_gt_refined = spmt<xpu, DType>(landmark_mask, landmark) + landmark_gt;
+    Tensor<xpu, 2, DType> data = in_data[mi_enum::kData].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> label = in_data[mi_enum::kLabel].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> mask = in_data[mi_enum::kMask].FlatTo2D<xpu, DType>(s);
+    Tensor<xpu, 2, DType> label_out = out_data[mi_enum::kLabelOut].FlatTo2D<xpu, DType>(s);
+    label_out = spmt<xpu, DType>(mask, data) + label;
   }
 
   virtual void Backward(const OpContext &ctx,
@@ -144,11 +138,11 @@ Operator* CreateOp(MaskIdentityParam param, int dtype);
 class MaskIdentityProp : public OperatorProperty {
  public:
   std::vector<std::string> ListArguments() const override {
-    return {"bbox", "landmark", "bbox_gt", "landmark_gt", "bbox_mask", "landmark_mask"};
+    return {"data", "label", "mask"};
   }
 
   std::vector<std::string> ListOutputs() const override {
-    return {"bbox_gt_refined", "landmark_gt_refined"};
+    return {"label_out"};
   }
 
   void Init(const std::vector<std::pair<std::string, std::string> >& kwargs) override {
@@ -163,12 +157,12 @@ class MaskIdentityProp : public OperatorProperty {
                   std::vector<TShape> *out_shape,
                   std::vector<TShape> *aux_shape) const override {
     using namespace mshadow;
-    CHECK_EQ(in_shape->size(), 6) << "Input:[bbox, landmark, bbox_gt, landmark_gt, bbox_mask, landmark_mask]";
+    CHECK_EQ(in_shape->size(), 3) << "Input:[Data, Label, Mask]";
+    CHECK_EQ(in_shape->at(2)[1], 1) << "Mask shape must be (?, 1)";
     const TShape &shape1 = in_shape->at(0);
     const TShape &shape2 = in_shape->at(1);
     if (shape1.ndim() == 0 || shape2.ndim() == 0) return false;
     out_shape->clear();
-    out_shape->push_back(shape1);
     out_shape->push_back(shape2);
     return true;
   }
@@ -201,8 +195,7 @@ class MaskIdentityProp : public OperatorProperty {
   std::vector<std::pair<int, void*> > ForwardInplaceOption(
     const std::vector<int> &in_data,
     const std::vector<void*> &out_data) const override {
-    return {{in_data[mi_enum::kBBoxGt], out_data[mi_enum::kBBoxGtOut]},
-            {in_data[mi_enum::kLandmarkGt], out_data[mi_enum::kLandmarkGtOut]}};
+    return {{in_data[mi_enum::kLabel], out_data[mi_enum::kLabelOut]}};
   }
 
   Operator* CreateOperator(Context ctx) const override {
