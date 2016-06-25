@@ -271,8 +271,8 @@ class BatchGenerator(object):
       assert net_type == 'o'
       self.data_shape = (3, 48, 48)
       self.data = np.zeros((self.batch_size, 3, 48, 48), dtype=np.float32)
-    self.face_shape = 1
-    self.face_data = np.zeros((self.batch_size, 1), dtype=np.float32)
+    self.label_shape = 1
+    self.label_data = np.zeros((self.batch_size,), dtype=np.float32)
     self.bbox_shape = 4
     self.bbox_data = np.zeros((self.batch_size, 4), dtype=np.float32)
     self.landmark_shape = 10
@@ -296,6 +296,7 @@ class BatchGenerator(object):
     start, end = 0, self.face_batch_size
     face_data, bbox_data, mask_data = self.next_face_data().next()  # next() is needed for iter generator
     self.data[start:end] = face_data
+    self.label_data[start:end] = 1
     self.bbox_data[start:end] = bbox_data
     self.landmark_data[start:end].fill(0)  # must fill 0
     self.mask_data[start:end] = mask_data
@@ -303,6 +304,7 @@ class BatchGenerator(object):
     start, end = self.face_batch_size, self.face_batch_size+self.landmark_batch_size
     face_data, landmark_data, mask_data = self.next_landmark_data().next()
     self.data[start:end] = face_data
+    self.label_data[start:end] = 1
     self.bbox_data[start:end].fill(0)
     self.landmark_data[start:end] = landmark_data
     self.mask_data[start:end] = mask_data
@@ -310,11 +312,12 @@ class BatchGenerator(object):
     start, end = self.face_batch_size+self.landmark_batch_size, self.batch_size
     nonface_data, mask_data = self.next_nonface_data().next()
     self.data[start:end] = nonface_data
+    self.label_data[start:end] = 0
     self.bbox_data[start:end].fill(0)
     self.landmark_data[start:end].fill(0)
     self.mask_data[start:end] = mask_data
     # copy it
-    return (self.data.copy(), self.face_data.copy(),
+    return (self.data.copy(), self.label_data.copy(),
             self.bbox_data.copy(), self.landmark_data.copy(),
             self.mask_data[:, 0].copy(), self.mask_data[:, 1].copy())
 
@@ -372,7 +375,7 @@ class MTDataIter(mx.io.DataIter):
     self.face_batch_size = batch_sizes[0]
     self.landmark_batch_size = batch_sizes[1]
     self.nonface_batch_size = batch_sizes[2]
-    self.batch_size = reduce(lambda acc, x: acc+x, batches, 0)
+    self.batch_size = reduce(lambda acc, x: acc+x, batch_sizes, 0)
     data_type = 'train' if is_train else 'val'
     face_db_name = 'data/%snet_face_%s'%(net_type, data_type)
     landmark_db_name = 'data/%snet_landmark_%s'%(net_type, data_type)
@@ -403,10 +406,10 @@ class MTDataIter(mx.io.DataIter):
     else:
       self.data_shape = (self.batch_size, 3, 48, 48)
     self.face_shape = (self.batch_size, 1)
-    self.bbox_shape = (self.batche_size, 4)
+    self.bbox_shape = (self.batch_size, 4)
     self.landmark_shape = (self.batch_size, 10)
     self.bbox_mask_shape = (self.batch_size, 1)
-    self.landmark_mask_shape = (self.batch_sizes, 1)
+    self.landmark_mask_shape = (self.batch_size, 1)
 
   def finalize(self):
     # forcely shut down
@@ -425,16 +428,8 @@ class MTDataIter(mx.io.DataIter):
     if self.current_batch_idx >= self.epoch_size:
       return False
     self.batch = batch_queue.get()
-    self.data = {
-      'data': self.batch[0],
-    }
-    self.label = {
-      'face': self.batch[1],
-      'bbox': self.batch[2],
-      'landmark': self.batch[3],
-      'bbox_mask': self.batch[4],
-      'landmark_mask': self.batch[5],
-    }
+    self.data = [mx.nd.array(data) for data in self.batch[:1]]
+    self.label = [mx.nd.array(data) for data in self.batch[1:]]
     self.current_batch_idx += 1
     return True
 
@@ -456,7 +451,7 @@ class MTDataIter(mx.io.DataIter):
 
   @property
   def provide_label(self):
-    return [('face', self.face_shape),
+    return [('label', self.label_shape),
             ('bbox', self.bbox_shape),
             ('landmark', self.landmark_shape),
             ('bbox_mask', self.bbox_mask_shape),
@@ -497,11 +492,11 @@ if __name__ == '__main__':
   batch = data_iter.get_one_batch()
   print 'get one'
   assert batch[0].shape == (1024, 3, 12, 12)  # data
-  assert batch[1].shape == (1024, 1)  # face cls
+  assert batch[1].shape == (1024,)  # face cls
   assert batch[2].shape == (1024, 4)  # bbox rg
   assert batch[3].shape == (1024, 10)  # landmark rg
-  assert batch[4].shape == (1024, 1)  # bbox mask
-  assert batch[5].shape == (1024, 1)  # landmark mask
+  assert batch[4].shape == (1024,)  # bbox mask
+  assert batch[5].shape == (1024,)  # landmark mask
   batch = data_iter.get_one_batch()
   print 'get one'
   # test MTDataIter
