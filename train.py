@@ -150,7 +150,7 @@ if __name__ == '__main__':
   parser.add_argument('--lr_minimum', type=float, default=1e-5, help='minimun learning rate')
   parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
   parser.add_argument('--weight_decay', type=float, default=1e-5, help='weight decay')
-  parser.add_argument('--model_save_prefix', type=str, default='reset/pnet', help='model save prefix')
+  parser.add_argument('--model_save_prefix', type=str, default='result/pnet', help='model save prefix')
   parser.add_argument('--gpus', type=str, help='gpus to use, e.g. "0,1,2"')
   args = parser.parse_args()
   main(args)
