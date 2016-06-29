@@ -73,9 +73,9 @@ def get_model(net='p', is_train=True):
 def add_loss(model, ws=[1.0, 1.0, 1.0]):
   """add loss
   """
-  face_gt = mx.sym.Variable('face_gt')
-  bbox_gt = mx.sym.Variable('bbox_gt')
-  landmark_gt = mx.sym.Variable('landmark_gt')
+  face_gt = mx.sym.Variable('face')
+  bbox_gt = mx.sym.Variable('bbox')
+  landmark_gt = mx.sym.Variable('landmark')
   bbox_mask = mx.sym.Variable('bbox_mask')
   landmark_mask = mx.sym.Variable('landmark_mask')
   face, bbox, landmark = model[0], model[1], model[2]
@@ -83,9 +83,9 @@ def add_loss(model, ws=[1.0, 1.0, 1.0]):
   # bbox_gt_ref = mx.sym.MaskIdentity(*[bbox, bbox_gt, bbox_mask], name='bbox_gt_ref')
   # landmark_gt_ref = mx.sym.MaskIdentity(*[landmark, landmark_gt, landmark_mask], name='landmark_gt_ref')
   bbox_gt_ref = mx.sym.MaskIdentity(data=bbox, label=bbox_gt,
-                                    mask=bbox_mask, name='bbox_gt_ref')
+                                    mask=bbox_mask, name='bbox_ref')
   landmark_gt_ref = mx.sym.MaskIdentity(data=landmark, label=landmark_gt,
-                                        mask=landmark_mask, name='landmark_gt_ref')
+                                        mask=landmark_mask, name='landmark_ref')
   output1 = mx.sym.SoftmaxOutput(data=face, label=face_gt, grad_scale=ws[0], name='output1')
   output2 = mx.sym.LinearRegressionOutput(data=bbox, label=bbox_gt_ref, grad_scale=ws[1], name='output2')
   output3 = mx.sym.LinearRegressionOutput(data=landmark, label=landmark_gt_ref, grad_scale=ws[2], name='output3')
@@ -134,4 +134,3 @@ if __name__ == '__main__':
   shape['data'] = (1, 3, 48, 48)
   fig = mx.viz.plot_network(ol, shape=shape)
   fig.render('onet_with_loss')
-

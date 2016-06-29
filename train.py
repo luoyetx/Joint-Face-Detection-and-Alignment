@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 # coding = utf-8
 
+import logging
 import argparse
 import numpy as np
 import mxnet as mx
@@ -9,21 +10,24 @@ from model import get_model, add_loss
 from dataiter import MTDataIter
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 class MTMetric(mx.metric.EvalMetric):
   """eval metric for network
   """
 
   def __init__(self, ws=[1.0, 1.0, 1.0]):
-    super(MTMetric, self).__init__(3)
     self.ws = ws
-    self.face_metric = mx.metric.CrossEntropy('face loss')
-    self.bbox_metric = mx.metric.MSE('bbox loss')
-    self.landmark_metric = mx.metric.MSE('landmark loss')
+    self.face_metric = mx.metric.CrossEntropy()
+    self.bbox_metric = mx.metric.MSE()
+    self.landmark_metric = mx.metric.MSE()
+    super(MTMetric, self).__init__('fda', 3)
 
   def update(self, labels, preds):
-    self.face_metric.update(labels[0], preds[0])
-    self.bbox_metric.update(labels[1], preds[1])
-    self.landmark_metric.update(labels[2], preds[2])
+    self.face_metric.update([labels[0]], [preds[0]])
+    self.bbox_metric.update([labels[1]], [preds[1]])
+    self.landmark_metric.update([labels[2]], [preds[2]])
 
   def reset(self):
     super(MTMetric, self).reset()
@@ -71,11 +75,10 @@ def get_data(args):
   return train_data, val_data
 
 
-def get_symbol(args):
-  """get symbol of net_type
+def get_ws(args):
+  """get weights
   """
   net_type = args.net_type
-  net = get_model(net_type, is_train=True)
   if net_type == 'p':
     ws = [1.0, 0.5, 0.5]
   elif net_type == 'r':
@@ -83,8 +86,18 @@ def get_symbol(args):
   else:
     assert net_type == 'o'
     ws = [1.0, 0.5, 1.0]
+  return ws
+
+
+def get_symbol(args):
+  """get symbol of net_type
+  """
+  net_type = args.net_type
+  net = get_model(net_type, is_train=True)
+  ws = get_ws(args)
   net_with_loss = add_loss(net, ws=ws)
   return net_with_loss
+
 
 def main(args):
   """main
@@ -93,7 +106,7 @@ def main(args):
   symbol = get_symbol(args)
 
   devs = mx.cpu() if args.gpus is None else [mx.gpu(int(i)) for i in args.gpus.split(',')]
-  lr_schedule = mx.lr_schedule.FactorSchedule(
+  lr_scheduler = mx.lr_scheduler.FactorScheduler(
     step=args.lr_reduce_step,
     factor=args.lr_reduce_factor,
     stop_factor_lr=args.lr_minimum)
@@ -102,6 +115,7 @@ def main(args):
                args.nonface_batch_size
   checkpoint = mx.callback.do_checkpoint(args.model_save_prefix)
   kv = 'local'
+  ws = get_ws(args)
 
   model = mx.model.FeedForward(
     ctx                 = devs,
@@ -110,13 +124,14 @@ def main(args):
     learning_rate       = args.lr,
     momentum            = args.momentum,
     wd                  = args.weight_decay,
-    lr_schedule         = lr_schedule,
+    lr_scheduler         = lr_scheduler,
     initializer         = mx.init.Xavier(factor_type="in", magnitude=2.34))
   model.fit(
     X                   = train_data,
     eval_data           = val_data,
+    eval_metric         = MTMetric(ws),
     kvstore             = kv,
-    batch_end_callback  = mx.callback.Speedometer(batch_sizes, 200),
+    batch_end_callback  = mx.callback.Speedometer(batch_size, 200),
     epoch_end_callback  = checkpoint)
 
 
@@ -125,7 +140,7 @@ if __name__ == '__main__':
   parser.add_argument('--net_type', type=str, default='p', help='network type, must be p or r or o')
   parser.add_argument('--face_batch_size', type=int, default=256, help='face data size in a batch')
   parser.add_argument('--landmark_batch_size', type=int, default=256, help='landmark data size in a batch')
-  parser.add_argument('--nonface_batch_size', type=int, default=256, help='nonface data size in a batch')
+  parser.add_argument('--nonface_batch_size', type=int, default=512, help='nonface data size in a batch')
   parser.add_argument('--train_epoch_size', type=int, default=625, help='how many batches in one train epoch')
   parser.add_argument('--val_epoch_size', type=int, default=156, help='how many batches in one val epoch')
   parser.add_argument('--max_epoch', type=int, default=200, help='number of epoches to train')

@@ -319,7 +319,8 @@ class BatchGenerator(object):
     # copy it
     return (self.data.copy(), self.label_data.copy(),
             self.bbox_data.copy(), self.landmark_data.copy(),
-            self.mask_data[:, 0].copy(), self.mask_data[:, 1].copy())
+            self.mask_data[:, 0].reshape(self.batch_size, 1).copy(),
+            self.mask_data[:, 1].reshape(self.batch_size, 1).copy())
 
   def next_face_data(self):
     """generate face data in a batch
@@ -405,7 +406,7 @@ class MTDataIter(mx.io.DataIter):
       self.data_shape = (self.batch_size, 3, 24, 24)
     else:
       self.data_shape = (self.batch_size, 3, 48, 48)
-    self.face_shape = (self.batch_size, 1)
+    self.face_shape = (self.batch_size,)
     self.bbox_shape = (self.batch_size, 4)
     self.landmark_shape = (self.batch_size, 10)
     self.bbox_mask_shape = (self.batch_size, 1)
@@ -451,7 +452,7 @@ class MTDataIter(mx.io.DataIter):
 
   @property
   def provide_label(self):
-    return [('label', self.label_shape),
+    return [('face', self.face_shape),
             ('bbox', self.bbox_shape),
             ('landmark', self.landmark_shape),
             ('bbox_mask', self.bbox_mask_shape),
@@ -495,8 +496,8 @@ if __name__ == '__main__':
   assert batch[1].shape == (1024,)  # face cls
   assert batch[2].shape == (1024, 4)  # bbox rg
   assert batch[3].shape == (1024, 10)  # landmark rg
-  assert batch[4].shape == (1024,)  # bbox mask
-  assert batch[5].shape == (1024,)  # landmark mask
+  assert batch[4].shape == (1024, 1)  # bbox mask
+  assert batch[5].shape == (1024, 1)  # landmark mask
   batch = data_iter.get_one_batch()
   print 'get one'
   # test MTDataIter
