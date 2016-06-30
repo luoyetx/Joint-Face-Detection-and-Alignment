@@ -124,7 +124,7 @@ def main(args):
     learning_rate       = args.lr,
     momentum            = args.momentum,
     wd                  = args.weight_decay,
-    lr_scheduler         = lr_scheduler,
+    lr_scheduler        = lr_scheduler,
     initializer         = mx.init.Xavier(factor_type="in", magnitude=2.34))
   model.fit(
     X                   = train_data,
