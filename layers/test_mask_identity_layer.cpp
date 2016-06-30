@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/filler.hpp"
-#include "caffe/layers/mask_identity.hpp"
+#include "caffe/layers/mask_identity_layer.hpp"
 #include "caffe/test/test_caffe_main.hpp"
 #include "caffe/test/test_gradient_check_util.hpp"
 
@@ -63,15 +63,15 @@ TYPED_TEST(MaskIdentityLayerTest, TestForward) {
     new MaskIdentityLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  const Dtype* bottom_ref = blob_bottom_ref_->cpu_data();
-  const Dtype* bottom_data = blob_bottom_data_->cpu_data();
-  const Dtype* mask_data = blob_bottom_mask_->cpu_data();
-  const Dtype* top_data = blob_top_data_->cpu_data();
+  const Dtype* bottom_ref = this->blob_bottom_ref_->cpu_data();
+  const Dtype* bottom_data = this->blob_bottom_data_->cpu_data();
+  const Dtype* mask_data = this->blob_bottom_mask_->cpu_data();
+  const Dtype* top_data = this->blob_top_data_->cpu_data();
 
-  const int n = blob_bottom_ref_->shape(0);
-  const int m = blob_bottom_ref_->shape(1);
+  const int n = this->blob_bottom_ref_->shape(0);
+  const int m = this->blob_bottom_ref_->shape(1);
   for (int i = 0; i < n; i++) {
-    const int offset = blob_bottom_ref_->offset(i);
+    const int offset = this->blob_bottom_ref_->offset(i);
     const Dtype* x_ref = bottom_ref + offset;
     const Dtype* x_data = bottom_data + offset;
     const Dtype* y = top_data + offset;
