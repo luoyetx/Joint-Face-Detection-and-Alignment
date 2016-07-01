@@ -8,6 +8,18 @@ import numpy as np
 from config import config
 
 
+def get_face_size(net_type):
+  """return face size according to net_type
+  """
+  if net_type == 'p':
+    return 12
+  elif net_type == 'r':
+    return 24
+  else:
+    assert net_type == 'o'
+    return 48
+
+
 def get_dirmapper(dirpath):
   """return dir mapper for wider face
   """

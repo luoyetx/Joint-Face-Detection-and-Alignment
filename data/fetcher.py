@@ -1,18 +1,41 @@
 #!/usr/bin/env python2.7
 # coding = utf-8
+#
+# generate batch for the network.
+# There're three type of data
+#  1. face with bbox offset
+#  2. face with landmark
+#  3. non-face
+# We generate this data in a batch with face_batch_size, landmark_batch_size and nonface_batch_size.
+#  1. data, this is face data resized to 3 x ? x ?, where ? is 12 or 24 or 48
+#  2. bbox, bbox offset, not all data type has this field
+#  3. landmark, 5 landmark points, not all data type has this field
+#  4. mask, this data field indicate the data point has bbox or landmark.
+#     1. mask[0] for bbox offset and mask[1] for landmark
+#     2. face with bbox offset, mask[0] = 0, mask[1] = 1, landmark data need to copy from network output
+#     3. face with landmark offset, mask[0] = 1, mask[1] = 0, bbox offset data need to copy from network output
+#     4. nonface, mask[0] = mask[1] = 1, both need to copy from network output
 
 import multiprocessing
 import cv2
 import lmdb
 import numpy as np
-from .utils import calc_IoU
+from .utils import calc_IoU, get_face_size
 
 
 NONFACE_OVERLAP_THRESHOLD = 0.3
 
 
+def preprocess_face_data(face_data):
+  """preprocess face data before feeding to network, original data lie in [0, 255]
+  """
+  res = (face_data - 128) / 128
+  return res
+
+
 class FaceDataGenerator(object):
   """Face Data Generator
+  given lmdb file path, generate a batch with size = batch_size each time
   """
 
   def __init__(self, db_name, net_type='p', batch_size=256, shuffle=False):
@@ -25,27 +48,19 @@ class FaceDataGenerator(object):
     self.shuffle = shuffle
     self.shuffle_idx = []
     self.reset()
-    if net_type == 'p':
-      self.face_shape = (3, 12, 12)
-      self.face_data = np.zeros((batch_size, 3, 12, 12), dtype=np.float32)
-    elif net_type == 'r':
-      self.face_shape = (3, 24, 24)
-      self.face_data = np.zeros((batch_size, 3, 24, 24), dtype=np.float32)
-    else:
-      assert net_type == 'o'
-      self.face_shape = (3, 48, 48)
-      self.face_data = np.zeros((batch_size, 3, 48, 48), dtype=np.float32)
-    self.bbox_shape = 4
+    size = get_face_size(net_type)
+    self.face_shape = (3, size, size)
+    self.face_data = np.zeros((batch_size, 3, size, size), dtype=np.float32)
+    self.bbox_shape = (4,)
     self.bbox_data = np.zeros((batch_size, 4), dtype=np.float32)
-    self.mask_data = np.zeros((batch_size, 2), dtype=np.float32)
-    self.mask_data[:, 0] = 0  # no copy for bbox
-    self.mask_data[:, 1] = 1  # need copy for landmark
 
   def __del__(self):
     self.txn.abort()
     self.db.close()
 
   def reset(self):
+    """reset the iter, if shuffle, shuffle the index
+    """
     self.current_batch_idx = 0
     if self.shuffle:
       self.shuffle_idx = np.random.permutation(self.data_size)
@@ -72,9 +87,7 @@ class FaceDataGenerator(object):
       bbox_data = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
       self.face_data[i] = face_data
       self.bbox_data[i] = bbox_data
-    # process face data
-    self.face_data = (self.face_data - 128) / 128
-    return (self.face_data, self.bbox_data, self.mask_data)
+    return (self.face_data, self.bbox_data)
 
 
 class LandmarkDataGenerator(object):
@@ -92,21 +105,11 @@ class LandmarkDataGenerator(object):
     self.shuffle = shuffle
     self.shuffle_idx = []
     self.reset()
-    if net_type == 'p':
-      self.face_shape = (3, 12, 12)
-      self.face_data = np.zeros((batch_size, 3, 12, 12), dtype=np.float32)
-    elif net_type == 'r':
-      self.face_shape = (3, 24, 24)
-      self.face_data = np.zeros((batch_size, 3, 24, 24), dtype=np.float32)
-    else:
-      assert net_type == 'o'
-      self.face_shape = (3, 48, 48)
-      self.face_data = np.zeros((batch_size, 3, 48, 48), dtype=np.float32)
-    self.landmark_shape = 10
+    size = get_face_size(net_type)
+    self.face_shape = (3, size, size)
+    self.face_data = np.zeros((batch_size, 3, size, size), dtype=np.float32)
+    self.landmark_shape = (10,)
     self.landmark_data = np.zeros((batch_size, 10), dtype=np.float32)
-    self.mask_data = np.zeros((batch_size, 2), dtype=np.float32)
-    self.mask_data[:, 0] = 1  # need copy for bbox
-    self.mask_data[:, 1] = 0  # no copy for landmark
 
   def __del__(self):
     self.txn.abort()
@@ -139,9 +142,7 @@ class LandmarkDataGenerator(object):
       landmark_data = np.fromstring(self.txn.get(landmark_key), dtype=np.float32).reshape(self.landmark_shape)
       self.face_data[i] = face_data
       self.landmark_data[i] = landmark_data
-    # process face data
-    self.face_data = (self.face_data - 128) / 128
-    return (self.face_data, self.landmark_data, self.mask_data)
+    return (self.face_data, self.landmark_data)
 
 
 class NonFaceDataGenerator(object):
@@ -160,16 +161,9 @@ class NonFaceDataGenerator(object):
     self.shuffle = shuffle
     self.shuffle_idx = []
     self.reset()
-    if net_type == 'p':
-      self.nonface_shape = (3, 12, 12)
-      self.nonface_data = np.zeros((batch_size, 3, 12, 12), dtype=np.float32)
-    elif net_type == 'r':
-      self.nonface_shape = (3, 24, 24)
-      self.nonface_data = np.zeros((batch_size, 3, 24, 24), dtype=np.float32)
-    else:
-      assert net_type == 'o'
-      self.nonface_shape = (3, 48, 48)
-      self.nonface_data = np.zeros((batch_size, 3, 48, 48), dtype=np.float32)
+    size = get_face_size(net_type)
+    self.nonface_shape = (3, size, size)
+    self.nonface_data = np.zeros((batch_size, 3, size, size), dtype=np.float32)
     self.mask_data = np.ones((batch_size, 2), dtype=np.float32)
 
   def reset(self):
@@ -201,9 +195,7 @@ class NonFaceDataGenerator(object):
       nonface = cv2.resize(nonface, self.nonface_shape[1:])
       nonface = nonface.transpose((2, 0, 1))
       self.nonface_data[idx] = nonface
-    # processing nonface data
-    self.nonface_data = (self.nonface_data - 128) / 128
-    return (self.nonface_data, self.mask_data)
+    return (self.nonface_data)
 
   def random_crop_nonface(self, img, face_bboxes, n):
     """random crop nonface region from img with size n
@@ -259,23 +251,21 @@ class BatchGenerator(multiprocessing.Process):
     self.landmark_batch_size = landmark_batch_size
     self.nonface_batch_size = nonface_batch_size
     self.batch_size = face_batch_size + landmark_batch_size + nonface_batch_size
-    if net_type == 'p':
-      self.data_shape = (3, 12, 12)
-      self.data = np.zeros((self.batch_size, 3, 12, 12), dtype=np.float32)
-    elif net_type == 'r':
-      self.data_shape = (3, 24, 24)
-      self.data = np.zeros((self.batch_size, 3, 24, 24), dtype=np.float32)
-    else:
-      assert net_type == 'o'
-      self.data_shape = (3, 48, 48)
-      self.data = np.zeros((self.batch_size, 3, 48, 48), dtype=np.float32)
-    self.label_shape = 1
+    # face data
+    size = get_face_size(net_type)
+    self.data_shape = (3, size, size)
+    self.data = np.zeros((self.batch_size, 3, size, size), dtype=np.float32)
+    # face label
+    self.label_shape = (1,)
     self.label_data = np.zeros((self.batch_size,), dtype=np.float32)
-    self.bbox_shape = 4
+    # face bbox offset
+    self.bbox_shape = (4,)
     self.bbox_data = np.zeros((self.batch_size, 4), dtype=np.float32)
-    self.landmark_shape = 10
+    # face landmark
+    self.landmark_shape = (10,)
     self.landmark_data = np.zeros((self.batch_size, 10), dtype=np.float32)
-    self.mask_shape = 2
+    # face mask
+    self.mask_shape = (2,)
     self.mask_data = np.zeros((self.batch_size, 2), dtype=np.float32)
 
   def finalize(self):
@@ -292,33 +282,37 @@ class BatchGenerator(multiprocessing.Process):
     """
     # face
     start, end = 0, self.face_batch_size
-    face_data, bbox_data, mask_data = self.next_face_data().next()  # next() is needed for iter generator
+    face_data, bbox_data = self.next_face_data().next()  # next() is needed for iter generator
     self.data[start:end] = face_data
     self.label_data[start:end] = 1
     self.bbox_data[start:end] = bbox_data
-    self.landmark_data[start:end].fill(0)  # must fill 0
-    self.mask_data[start:end] = mask_data
+    self.landmark_data[start:end] = 0
+    self.mask_data[start:end, 0] = 0
+    self.mask_data[start:end, 1] = 1
     # landmark
     start, end = self.face_batch_size, self.face_batch_size+self.landmark_batch_size
-    face_data, landmark_data, mask_data = self.next_landmark_data().next()
+    face_data, landmark_data = self.next_landmark_data().next()
     self.data[start:end] = face_data
     self.label_data[start:end] = 1
-    self.bbox_data[start:end].fill(0)
+    self.bbox_data[start:end] = 0
     self.landmark_data[start:end] = landmark_data
-    self.mask_data[start:end] = mask_data
+    self.mask_data[start:end, 0] = 1
+    self.mask_data[start:end, 1] = 0
     # nonface
     start, end = self.face_batch_size+self.landmark_batch_size, self.batch_size
-    nonface_data, mask_data = self.next_nonface_data().next()
+    nonface_data = self.next_nonface_data().next()
     self.data[start:end] = nonface_data
     self.label_data[start:end] = 0
-    self.bbox_data[start:end].fill(0)
-    self.landmark_data[start:end].fill(0)
-    self.mask_data[start:end] = mask_data
+    self.bbox_data[start:end] = 0
+    self.landmark_data[start:end] = 0
+    self.mask_data[start:end] = 1
+    # preprocess face_data
+    self.data = preprocess_face_data(self.data)
     # copy it
     return (self.data.copy(), self.label_data.copy(),
             self.bbox_data.copy(), self.landmark_data.copy(),
-            self.mask_data[:, 0].reshape(self.batch_size, 1).copy(),
-            self.mask_data[:, 1].reshape(self.batch_size, 1).copy())
+            self.mask_data[:, 0].copy(),
+            self.mask_data[:, 1].copy())
 
   def next_face_data(self):
     """generate face data in a batch
@@ -326,7 +320,7 @@ class BatchGenerator(multiprocessing.Process):
     while True:
       self.face_generator.reset()
       for batch in self.face_generator:
-        yield batch  # face_data, bbox_data, mask_data
+        yield batch  # face_data, bbox_data
 
   def next_landmark_data(self):
     """generate landmark data in a batch
@@ -334,7 +328,7 @@ class BatchGenerator(multiprocessing.Process):
     while True:
       self.landmark_generator.reset()
       for batch in self.landmark_generator:
-        yield batch  # face_data, landmark_data, mask_data
+        yield batch  # face_data, landmark_data
 
   def next_nonface_data(self):
     """generate nonface data in a batch
@@ -342,7 +336,7 @@ class BatchGenerator(multiprocessing.Process):
     while True:
       self.nonface_generator.reset()
       for batch in self.nonface_generator:
-        yield batch  # nonface_data, mask_data
+        yield batch  # nonface_data
 
   def run(self):
     """run

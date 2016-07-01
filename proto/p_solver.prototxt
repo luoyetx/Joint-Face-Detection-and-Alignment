@@ -1,0 +1,20 @@
+net: "proto/p_train_val.prototxt"
+
+test_iter: 200
+test_interval: 700
+
+base_lr: 0.01
+momentum: 0.9
+weight_decay: 0.0005
+
+lr_policy: "step"
+gamma: 0.1
+stepsize: 7000
+
+display: 350
+
+max_iter: 70000
+snapshot: 0
+snapshot_prefix: "result/pnet_"
+
+solver_mode: GPU
