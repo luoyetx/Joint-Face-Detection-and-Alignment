@@ -1,0 +1,3 @@
+[submodule "mini-caffe"]
+	path = mini-caffe
+	url = git@github.com:luoyetx/mini-caffe.git

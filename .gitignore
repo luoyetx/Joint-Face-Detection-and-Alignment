@@ -1,5 +1,6 @@
-data/CelebA
-data/WIDER
+build/
+data/CelebA/
+data/WIDER/
 
 *.mdb
 *.pyc

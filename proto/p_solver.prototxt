@@ -15,6 +15,6 @@ display: 350
 
 max_iter: 70000
 snapshot: 0
-snapshot_prefix: "result/pnet_"
+snapshot_prefix: "result/pnet"
 
 solver_mode: GPU

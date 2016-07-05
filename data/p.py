@@ -80,8 +80,8 @@ def apply_offset(bbox, offset):
     dx, dy, dw, dh = offset
     w_ = w*dw
     h_ = h*dh
-    x_ = x + dx*w_
-    y_ = y + dy*h_
+    x_ = x + dx*w
+    y_ = y + dy*h
     return [int(x_), int(y_), int(w_), int(h_)]
 
 
