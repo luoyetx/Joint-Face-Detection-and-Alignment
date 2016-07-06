@@ -85,6 +85,11 @@ class FaceDataGenerator(object):
       bbox_key = '%08d_offset'%db_idx
       face_data = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       bbox_data = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
+      if np.random.uniform() > 0.5:  # flip
+        face_data[0] = np.fliplr(face_data[0])
+        face_data[1] = np.fliplr(face_data[1])
+        face_data[2] = np.fliplr(face_data[2])
+        bbox_data[0] = -bbox_data[0]
       self.face_data[i] = face_data
       self.bbox_data[i] = bbox_data
     return (self.face_data, self.bbox_data)
@@ -193,6 +198,8 @@ class NonFaceDataGenerator(object):
       x, y, w, h = nonface_bbox
       nonface = img[y:y+h, x:x+w, :]
       nonface = cv2.resize(nonface, self.nonface_shape[1:])
+      if np.random.uniform() > 0.5:  # flip
+        nonface = cv2.flip(nonface, 1)
       nonface = nonface.transpose((2, 0, 1))
       self.nonface_data[idx] = nonface
     return (self.nonface_data)

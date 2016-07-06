@@ -15,8 +15,8 @@ from utils import get_logger
 
 
 READER_N = 2
-RANDOM_OFFSET_N = 3
-OVERLAP_THRESHOLD = 0.5
+RANDOM_OFFSET_N = 10
+OVERLAP_THRESHOLD = 0.65
 
 q_in = [multiprocessing.Queue() for i in range(READER_N)]
 q_out = multiprocessing.Queue(1024)
@@ -50,8 +50,8 @@ def face_region_proposal(region, face_gt_bboxes, overlap_th):
     x = x_center - size / 2
     y = y_center - size / 2
     sns = np.random.uniform(0.8, 1.3, n)
-    xns = np.random.uniform(-0.2, 0.2, n)
-    yns = np.random.uniform(-0.2, 0.2, n)
+    xns = np.random.uniform(-0.3, 0.3, n)
+    yns = np.random.uniform(-0.3, 0.3, n)
     sizes = size*sns
     xns = x - xns*sizes
     yns = y - yns*sizes
@@ -66,8 +66,20 @@ def face_region_proposal(region, face_gt_bboxes, overlap_th):
     return [dx, dy, dw, dh]
 
   for gt_bbox in face_gt_bboxes:
+    x, y, w, h = gt_bbox
+    size = (w + h) / 2
+    x_center = x + w / 2
+    y_center = y + h / 2
+    x = x_center - size / 2
+    y = y_center - size / 2
+    w = h = size
+    x, y, w, h = int(x), int(y), int(w), int(h)
+    bbox_new = [x, y, w, h]
+    if check_bbox(bbox_new, region):
+      face_bboxes.append(bbox_new)
+      face_offsets.append(calc_offset(bbox_new, gt_bbox))
     for bbox in random_offset(gt_bbox, RANDOM_OFFSET_N):
-      if check_bbox(bbox, region) and calc_IoU(bbox, gt_bbox) > overlap_th:
+      if check_bbox(bbox, region) and calc_IoU(bbox, bbox_new) > overlap_th:
         face_bboxes.append(bbox)
         face_offsets.append(calc_offset(bbox, gt_bbox))
   return face_bboxes, face_offsets
@@ -100,12 +112,10 @@ def face_reader_func(q_in, q_out):
       face_data = face.tostring()  # uint8
       offset_data = np.asarray(offset, dtype=np.float32).tostring()
       q_out.put(('data', [face_data, offset_data]))
-    #   # reverse
-    #   rbbox = apply_offset(bbox, offset)
-    #   x, y, w, h = rbbox
-    #   cv2.rectangle(img, (x, y), (x+w, y+h), (0,0,255), 2)
-    # cv2.imshow('img', img)
-    # cv2.waitKey(0)
+    x, y, w, h = bboxes[0]
+    cv2.rectangle(img, (x, y), (x+w, y+h), (0,0,255), 1)
+    cv2.imshow('img', img)
+    cv2.waitKey(0)
 
 
 def face_writer_func(q_out, db_name):

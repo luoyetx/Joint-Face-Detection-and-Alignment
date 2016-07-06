@@ -56,7 +56,7 @@ def load_wider():
         bbox = [x, y, w, h]
 
         # only large enough
-        if max(w, h) > 12:
+        if min(w, h) > 15:
           bboxes.append(bbox)
 
       result.append([img_path, bboxes])
