@@ -106,7 +106,7 @@ layer {
   bottom: "conv3"
   top: "face_bbox"
   convolution_param {
-    num_output: 4
+    num_output: 3
     kernel_size: 1
     stride: 1
   }

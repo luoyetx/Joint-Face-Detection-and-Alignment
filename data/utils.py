@@ -5,7 +5,20 @@ import os
 import logging
 import cv2
 import numpy as np
-from config import config
+
+
+# dataDir contains `WIDER`, `CelebA`, `aflw`
+data_dir = os.path.dirname(os.path.abspath(__file__))
+# dataWIDER contains `WIDER_train`, `WIDER_val`, `WIDER_test`, `wider_face_split`
+data_wider = os.path.join(data_dir, 'WIDER')
+# dataCelebA contains `img_celeba`, `list_landmarks_celeba.txt`
+data_celeba = os.path.join(data_dir, 'CelebA')
+
+config = {
+  'data_dir': data_dir,
+  'data_wider': data_wider,
+  'data_celeba': data_celeba
+}
 
 
 def get_face_size(net_type):
@@ -53,11 +66,24 @@ def load_wider():
         line = fin.readline().strip()
         components = line.split(' ')
         x, y, w, h = [float(_) for _ in components]
-        bbox = [x, y, w, h]
+        x_center = x + w / 2
+        y_center = y + h / 2
+        size = (w + h) / 2
+        x = x_center - size / 2
+        y = y_center - size / 2
 
         # only large enough
-        if min(w, h) > 15:
+        if size > 20:
+          bbox = [int(x), int(y), int(size), int(size)]
           bboxes.append(bbox)
+
+      # # for debug
+      # img = cv2.imread(img_path)
+      # for bbox in bboxes:
+      #   x, y, w, h = bbox
+      #   cv2.rectangle(img, (x,y), (x+w,y+h), (0,0,255), 1)
+      # cv2.imshow('img', img)
+      # cv2.waitKey(0)
 
       result.append([img_path, bboxes])
     fin.close()
@@ -98,6 +124,15 @@ def load_celeba():
     h_new = h*(1 + 2*ratio)
     bbox = [x_new, y_new, w_new, h_new]
     bbox = [int(_) for _ in bbox]
+
+    # # for debug
+    # img = cv2.imread(img_path)
+    # x, y, w, h = bbox
+    # cv2.rectangle(img, (x, y), (x+w, y+h), (0,0,255), 1)
+    # for j in range(5):
+    #   cv2.circle(img, (int(landmark[j, 0]), int(landmark[j, 1])), 2, (0,255,0), -1)
+    # cv2.imshow('img', img)
+    # cv2.waitKey(0)
 
     # normalize landmark
     landmark[:, 0] = (landmark[:, 0] - bbox[0]) / bbox[2]

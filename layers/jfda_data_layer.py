@@ -3,7 +3,7 @@
 import json
 from multiprocessing import Queue
 import caffe
-from data.utils import load_wider, get_face_size
+from data.utils import get_face_size
 from data.fetcher import BatchGenerator
 
 
@@ -16,23 +16,24 @@ class JfdaDataLayer(caffe.Layer):
   write the layer like below in prototxt
 
   layer {
-    name: 'data'
-    type: 'Python'
-    top: 'data'
-    top: 'label'
-    top: 'bbox'
-    top: 'landmark'
-    top: 'bbox_mask'
-    top: 'landmark_mask'
+    name: "data"
+    type: "Python"
+    top: "data"
+    top: "label"
+    top: "bbox"
+    top: "landmark"
+    top: "bbox_mask"
+    top: "landmark_mask"
     python_param {
-      module: 'layers.jfda_data_layer'
-      layer: 'JfdaDataLayer'
+      module: "layers.jfda_data_layer"
+      layer: "JfdaDataLayer"
       param_str: '{'
                  '  "net_type": "p",'
                  '  "is_train": true,'
                  '  "shuffle": true,'
                  '  "face_db_name": "data/pnet_face_train",'
                  '  "landmark_db_name": "data/pnet_landmark_train",'
+                 '  "nonface_db_name": "data/pnet_nonface_train",'
                  '  "face_batch_size": 256,'
                  '  "landmark_batch_size": 256,'
                  '  "nonface_batch_size": 512'
@@ -50,6 +51,7 @@ class JfdaDataLayer(caffe.Layer):
     shuffle = param['shuffle']
     face_db_name = param['face_db_name']
     landmark_db_name = param['landmark_db_name']
+    nonface_db_name = param['nonface_db_name']
     face_batch_size = param['face_batch_size']
     landmark_batch_size = param['landmark_batch_size']
     nonface_batch_size = param['nonface_batch_size']
@@ -58,20 +60,18 @@ class JfdaDataLayer(caffe.Layer):
            net_type == 'r' or \
            net_type == 'o'
 
-    train, val = load_wider()
-    nonface_bgs = train if is_train else val
     kwargs = {
       'net_type': net_type,
       'shuffle': shuffle,
       'face_db_name': face_db_name,
       'landmark_db_name': landmark_db_name,
-      'nonface_bgs': nonface_bgs,
+      'nonface_db_name': nonface_db_name,
       'face_batch_size': face_batch_size,
       'landmark_batch_size': landmark_batch_size,
       'nonface_batch_size': nonface_batch_size,
     }
-    # lauch generator
-    self.queue = Queue(10)
+    # launch generator
+    self.queue = Queue(32)
     self.generator = BatchGenerator(self.queue, **kwargs)
     self.generator.start()
 
@@ -85,7 +85,7 @@ class JfdaDataLayer(caffe.Layer):
     self.face_size = get_face_size(net_type)
     top[0].reshape(self.batch_size, 3, self.face_size, self.face_size)
     top[1].reshape(self.batch_size)
-    top[2].reshape(self.batch_size, 4)
+    top[2].reshape(self.batch_size, 3)
     top[3].reshape(self.batch_size, 10)
     top[4].reshape(self.batch_size)
     top[5].reshape(self.batch_size)

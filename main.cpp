@@ -5,6 +5,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include "caffe/caffe.hpp"
 
+#define TIMER_BEGIN { double __time__ = clock();
+#define TIMER_NOW ((clock() - __time__) / CLOCKS_PER_SEC * 1000)
+#define TIMER_END }
+
 using namespace cv;
 using namespace std;
 
@@ -36,7 +40,10 @@ struct Detector {
     boost::shared_ptr<caffe::Blob<float> > input = pnet->blob_by_name("data");
     boost::shared_ptr<caffe::Blob<float> > face_prob = pnet->blob_by_name("face_prob");
     boost::shared_ptr<caffe::Blob<float> > bbox_offset = pnet->blob_by_name("face_bbox");
+    TIMER_BEGIN
+    int counter = 0;
     while (std::min(img.cols, img.rows) > 20) {
+      counter++;
       input->Reshape(1, 3, height, width);
       float* input_data = input->mutable_cpu_data();
       for (int i = 0; i < height; i++) {
@@ -63,8 +70,8 @@ struct Detector {
 
             bbox.x = bbox.x + bbox.w * bbox_offset_data[bbox_offset->offset(0, 0, i, j)];
             bbox.y = bbox.y + bbox.h * bbox_offset_data[bbox_offset->offset(0, 1, i, j)];
-            bbox.w = bbox.w * bbox_offset_data[bbox_offset->offset(0, 2, i, j)];
-            bbox.h = bbox.h * bbox_offset_data[bbox_offset->offset(0, 3, i, j)];
+            bbox.w = bbox.w * exp(bbox_offset_data[bbox_offset->offset(0, 2, i, j)]);
+            bbox.h = bbox.h * exp(bbox_offset_data[bbox_offset->offset(0, 2, i, j)]);
             bbox.score = prob;
             res.push_back(bbox);
           }
@@ -76,6 +83,9 @@ struct Detector {
       width = width / factor;
       cv::resize(img, img, cv::Size(width, height));
     }
+    cout << counter << endl;
+    cout << TIMER_NOW << endl;
+    TIMER_END
     return nms(res);
   }
 
@@ -131,8 +141,12 @@ int main(int argc, char *argv[]) {
   Mat img = cv::imread("../test.jpg", cv::IMREAD_COLOR);
 
   cout << "start" << endl;
-  vector<FaceBBox> res = detector.detect(img);
-  cout << "end" << endl;
+  vector<FaceBBox> res;
+  TIMER_BEGIN
+  res = detector.detect(img);
+  cout << TIMER_NOW << endl;
+  TIMER_END
+  cout << "end\t" << endl;
   cout << "detect " << res.size() << " faces" << endl;
 
   for (int i = 0; i < res.size(); i++) {

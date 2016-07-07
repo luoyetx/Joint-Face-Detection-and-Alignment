@@ -17,9 +17,10 @@ layer {
                '  "shuffle": true,'
                '  "face_db_name": "data/pnet_face_train",'
                '  "landmark_db_name": "data/pnet_landmark_train",'
+               '  "nonface_db_name": "data/pnet_nonface_train",'
                '  "face_batch_size": 256,'
                '  "landmark_batch_size": 256,'
-               '  "nonface_batch_size": 512'
+               '  "nonface_batch_size": 1024'
                '}'
   }
   include {
@@ -44,9 +45,10 @@ layer {
                '  "shuffle": true,'
                '  "face_db_name": "data/pnet_face_val",'
                '  "landmark_db_name": "data/pnet_landmark_val",'
+               '  "nonface_db_name": "data/pnet_nonface_val",'
                '  "face_batch_size": 256,'
                '  "landmark_batch_size": 256,'
-               '  "nonface_batch_size": 512'
+               '  "nonface_batch_size": 1024'
                '}'
   }
   include {
@@ -208,7 +210,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 4
+    num_output: 3
     kernel_size: 1
     stride: 1
     weight_filler {

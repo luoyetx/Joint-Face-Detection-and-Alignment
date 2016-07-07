@@ -23,9 +23,6 @@ import numpy as np
 from .utils import calc_IoU, get_face_size
 
 
-NONFACE_OVERLAP_THRESHOLD = 0.3
-
-
 def preprocess_face_data(face_data):
   """preprocess face data before feeding to network, original data lie in [0, 255]
   """
@@ -51,8 +48,8 @@ class FaceDataGenerator(object):
     size = get_face_size(net_type)
     self.face_shape = (3, size, size)
     self.face_data = np.zeros((batch_size, 3, size, size), dtype=np.float32)
-    self.bbox_shape = (4,)
-    self.bbox_data = np.zeros((batch_size, 4), dtype=np.float32)
+    self.bbox_shape = (3,)
+    self.bbox_data = np.zeros((batch_size, 3), dtype=np.float32)
 
   def __del__(self):
     self.txn.abort()
@@ -85,11 +82,11 @@ class FaceDataGenerator(object):
       bbox_key = '%08d_offset'%db_idx
       face_data = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       bbox_data = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
-      if np.random.uniform() > 0.5:  # flip
-        face_data[0] = np.fliplr(face_data[0])
-        face_data[1] = np.fliplr(face_data[1])
-        face_data[2] = np.fliplr(face_data[2])
-        bbox_data[0] = -bbox_data[0]
+      # if np.random.uniform() > 0.5:  # flip
+      #   face_data[0] = np.fliplr(face_data[0])
+      #   face_data[1] = np.fliplr(face_data[1])
+      #   face_data[2] = np.fliplr(face_data[2])
+      #   bbox_data[0] = -bbox_data[0]
       self.face_data[i] = face_data
       self.bbox_data[i] = bbox_data
     return (self.face_data, self.bbox_data)
@@ -154,29 +151,31 @@ class NonFaceDataGenerator(object):
   """Nonface Data Generator
   """
 
-  def __init__(self, bgs, net_type='p', batch_size=512, shuffle=False):
-    """init
-    :param bgs: bg list with bbox, [(img_path, bboxes), (img_path, bboxes)....]
-    """
-    self.bgs = bgs
-    self.data_size = len(bgs)
-    self.epoch_size = self.data_size
+  def __init__(self, db_name, net_type='p', batch_size=512, shuffle=False):
+    self.db_name = db_name
+    self.db = lmdb.open(db_name)
+    self.txn = self.db.begin()
+    self.data_size = int(self.txn.get('size'))
     self.batch_size = batch_size
-    self.current_bg_idx = 0
+    self.epoch_size = self.data_size / self.batch_size
+    self.current_batch_idx = 0
     self.shuffle = shuffle
     self.shuffle_idx = []
     self.reset()
     size = get_face_size(net_type)
     self.nonface_shape = (3, size, size)
     self.nonface_data = np.zeros((batch_size, 3, size, size), dtype=np.float32)
-    self.mask_data = np.ones((batch_size, 2), dtype=np.float32)
 
   def reset(self):
-    self.current_bg_idx = 0
+    self.current_batch_idx = 0
     if self.shuffle:
       self.shuffle_idx = np.random.permutation(self.data_size)
     else:
       self.shuffle_idx = np.arange(self.data_size)
+
+  def __del__(self):
+    self.txn.abort()
+    self.db.close()
 
   def __iter__(self):
     return self
@@ -185,48 +184,17 @@ class NonFaceDataGenerator(object):
     return self.next()
 
   def next(self):
-    if self.current_bg_idx >= self.data_size:
+    if self.current_batch_idx >= self.epoch_size:
       raise StopIteration()
-    img_path, face_bboxes = self.bgs[self.shuffle_idx[self.current_bg_idx]]
-    self.current_bg_idx += 1
-    img = cv2.imread(img_path, cv2.IMREAD_COLOR)
-    if img is None:  # read failed skip it
-      return self.next()
-    nonface_bboxes = self.random_crop_nonface(img, face_bboxes, self.batch_size)
-    assert len(nonface_bboxes) == self.batch_size
-    for idx, nonface_bbox in enumerate(nonface_bboxes):
-      x, y, w, h = nonface_bbox
-      nonface = img[y:y+h, x:x+w, :]
-      nonface = cv2.resize(nonface, self.nonface_shape[1:])
-      if np.random.uniform() > 0.5:  # flip
-        nonface = cv2.flip(nonface, 1)
-      nonface = nonface.transpose((2, 0, 1))
-      self.nonface_data[idx] = nonface
+    offset = self.current_batch_idx * self.batch_size
+    self.current_batch_idx += 1
+    for i in range(self.batch_size):
+      idx = offset + i
+      db_idx = self.shuffle_idx[idx]
+      nonface_key = '%08d_data'%db_idx
+      nonface_data = np.fromstring(self.txn.get(nonface_key), dtype=np.uint8).reshape(self.nonface_shape)
+      self.nonface_data[i] = nonface_data
     return (self.nonface_data)
-
-  def random_crop_nonface(self, img, face_bboxes, n):
-    """random crop nonface region from img with size n
-    :param img: image
-    :param face_bboxes: face bboxes in this image
-    :param n: number of nonface bboxes to crop
-    :return nonface_bboxes: nonface region with size n
-    """
-    nonface_bboxes = []
-    height, width = img.shape[:-1]
-    range_x = width - self.nonface_shape[2]
-    range_y = height - self.nonface_shape[1]
-    while len(nonface_bboxes) < n:
-      x, y = np.random.randint(range_x), np.random.randint(range_y)
-      w = h = np.random.randint(low=self.nonface_shape[1]/2, high=min(width - x, height - y))
-      nonface_bbox = [x, y, w, h]
-      use_it = True
-      for face_bbox in face_bboxes:
-        if calc_IoU(nonface_bbox, face_bbox) > NONFACE_OVERLAP_THRESHOLD:
-          use_it = False
-          break
-      if use_it:
-        nonface_bboxes.append(nonface_bbox)
-    return nonface_bboxes
 
 
 class BatchGenerator(multiprocessing.Process):
@@ -236,9 +204,9 @@ class BatchGenerator(multiprocessing.Process):
   def __init__(self, queue, net_type='p', shuffle=False,
                face_db_name='data/pnet_face_train',
                landmark_db_name='data/pnet_landmark_train',
-               nonface_bgs=[],
-               face_batch_size=256,
-               landmark_batch_size=256,
+               nonface_db_name='data/pnet_nonface_train',
+               face_batch_size=126,
+               landmark_batch_size=126,
                nonface_batch_size=512):
     super(BatchGenerator, self).__init__()
     self.queue = queue
@@ -250,7 +218,7 @@ class BatchGenerator(multiprocessing.Process):
                                                     net_type=net_type,
                                                     batch_size=landmark_batch_size,
                                                     shuffle=shuffle)
-    self.nonface_generator = NonFaceDataGenerator(bgs=nonface_bgs,
+    self.nonface_generator = NonFaceDataGenerator(db_name=nonface_db_name,
                                                   net_type=net_type,
                                                   batch_size=nonface_batch_size,
                                                   shuffle=shuffle)
@@ -266,8 +234,8 @@ class BatchGenerator(multiprocessing.Process):
     self.label_shape = (1,)
     self.label_data = np.zeros((self.batch_size,), dtype=np.float32)
     # face bbox offset
-    self.bbox_shape = (4,)
-    self.bbox_data = np.zeros((self.batch_size, 4), dtype=np.float32)
+    self.bbox_shape = (3,)
+    self.bbox_data = np.zeros((self.batch_size, 3), dtype=np.float32)
     # face landmark
     self.landmark_shape = (10,)
     self.landmark_data = np.zeros((self.batch_size, 10), dtype=np.float32)
