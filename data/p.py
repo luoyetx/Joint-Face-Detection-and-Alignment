@@ -12,7 +12,7 @@ import numpy as np
 from utils import load_wider, load_celeba
 from utils import calc_IoU, calc_IoUs, check_bbox
 from utils import draw_landmark, show_image
-from utils import get_logger, get_face_size
+from utils import get_logger
 
 
 READER_N = 4
@@ -25,12 +25,9 @@ q_in = [multiprocessing.Queue() for i in range(READER_N)]
 q_out = multiprocessing.Queue(1024)
 
 logger = get_logger()
-net_type = 'p'
 
 G2 = 2*1024*1024*1024
 G4 = 2*G2
-G8 = 2*G4
-G16 = 2*G8
 
 
 def fill_queues(data, qs):
@@ -106,8 +103,7 @@ def face_reader_func(q_in, q_out):
     for bbox, offset in zip(bboxes, offsets):
       x, y, w, h = bbox
       face = img[y:y+h, x:x+w, :]
-      face_size = get_face_size(net_type)
-      face = cv2.resize(face, (face_size, face_size))
+      face = cv2.resize(face, (12, 12))
       face = face.transpose(2, 0, 1)
       face_data = face.tostring()  # uint8
       offset_data = np.asarray(offset, dtype=np.float32).tostring()
@@ -186,8 +182,7 @@ def landmark_reader_func(q_in, q_out):
       continue
     x, y, w, h = bbox
     face = img[y:y+h, x:x+w, :]  # crop
-    face_size = get_face_size(net_type)
-    face = cv2.resize(face, (face_size, face_size))
+    face = cv2.resize(face, (12, 12))
     face = face.transpose(2, 0, 1)
     face_data = face.tostring()  # string for lmdb, uint8
     landmark_data = landmark.tostring()  # float32
@@ -283,8 +278,7 @@ def nonface_reader_func(q_in, q_out):
     for bbox in bboxes:
       x, y, w, h = bbox
       nonface = img[y:y+h, x:x+w, :]
-      nonface_size = get_face_size(net_type)
-      nonface = cv2.resize(nonface, (nonface_size, nonface_size))
+      nonface = cv2.resize(nonface, (12, 12))
       nonface = nonface.transpose(2, 0, 1)
       nonface_data = nonface.tostring()  # uint8
       q_out.put(('data', [nonface_data]))
