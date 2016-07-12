@@ -1,4 +1,4 @@
-name: "pNet"
+name: "rNet"
 layer {
   name: "data"
   type: "Input"
@@ -7,8 +7,8 @@ layer {
     shape: {
       dim: 1
       dim: 3
-      dim: 12
-      dim: 12
+      dim: 24
+      dim: 24
     }
   }
 }
@@ -19,7 +19,7 @@ layer {
   bottom: "data"
   top: "conv1"
   convolution_param {
-    num_output: 10
+    num_output: 28
     kernel_size: 3
     stride: 1
   }
@@ -48,7 +48,7 @@ layer {
   bottom: "pool1"
   top: "conv2"
   convolution_param {
-    num_output: 16
+    num_output: 48
     kernel_size: 3
     stride: 1
   }
@@ -59,15 +59,26 @@ layer {
   bottom: "conv2"
   top: "conv2"
 }
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
 
 layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "conv2"
+  bottom: "pool2"
   top: "conv3"
   convolution_param {
-    num_output: 32
-    kernel_size: 3
+    num_output: 64
+    kernel_size: 2
     stride: 1
   }
 }
@@ -78,48 +89,49 @@ layer {
   top: "conv3"
 }
 
-# face label
 layer {
-  name: "face_label"
-  type: "Convolution"
+  name: "fc"
+  type: "InnerProduct"
   bottom: "conv3"
-  top: "face_label"
-  convolution_param {
-    num_output: 2
-    kernel_size: 1
-    stride: 1
+  top: "fc"
+  inner_product_param {
+    num_output: 128
   }
 }
 layer {
-  name: "face_prob"
-  type: "Softmax"
-  bottom: "face_label"
-  top: "face_prob"
-  softmax_param {
-    axis: 1
+  name: "relu4"
+  type: "ReLU"
+  bottom: "fc"
+  top: "fc"
+}
+
+# face label
+layer {
+  name: "face_label"
+  type: "InnerProduct"
+  bottom: "fc"
+  top: "face_label"
+  inner_product_param {
+    num_output: 2
   }
 }
 # face bbox
 layer {
   name: "face_bbox"
-  type: "Convolution"
-  bottom: "conv3"
+  type: "InnerProduct"
+  bottom: "fc"
   top: "face_bbox"
-  convolution_param {
+  inner_product_param {
     num_output: 3
-    kernel_size: 1
-    stride: 1
   }
 }
 # face landmark
 layer {
   name: "face_landmark"
-  type: "Convolution"
-  bottom: "conv3"
+  type: "InnerProduct"
+  bottom: "fc"
   top: "face_landmark"
-  convolution_param {
+  inner_product_param {
     num_output: 10
-    kernel_size: 1
-    stride: 1
   }
 }
