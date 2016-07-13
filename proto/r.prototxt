@@ -115,6 +115,12 @@ layer {
     num_output: 2
   }
 }
+layer {
+  name: "face_prob"
+  type: "Softmax"
+  bottom: "face_label"
+  top: "face_prob"
+}
 # face bbox
 layer {
   name: "face_bbox"

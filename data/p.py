@@ -88,7 +88,7 @@ def face_region_proposal(img, face_gt_bboxes, overlap_th):
     if check_bbox(gt_bbox, region):
       counter += 1
       face_bboxes.append(gt_bbox)
-      face_offsets.append([0, 0, 1])
+      face_offsets.append([0, 0, 0])
     while counter < RANDOM_FACE_N and tries < 50:
       tries += 1
       bbox = random_offset(gt_bbox)
