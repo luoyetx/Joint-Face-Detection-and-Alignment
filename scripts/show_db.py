@@ -5,11 +5,8 @@ import argparse
 import lmdb
 
 
-CUR = os.path.dirname(os.path.abspath(__file__))
-
-
 def main(args):
-  net_type = args.net_type
+  net_type = args.net
   if net_type == 'p':
     net = 'pnet'
   elif net_type == 'r':
@@ -26,12 +23,12 @@ def main(args):
     db.close
     return size
 
-  face_train_size = get_size(CUR + '/%s_face_train'%net)
-  face_val_size = get_size(CUR + '/%s_face_val'%net)
-  landmark_train_size = get_size(CUR + '/%s_landmark_train'%net)
-  landmark_val_size = get_size(CUR + '/%s_landmark_val'%net)
-  nonface_train_size = get_size(CUR + '/%s_nonface_train'%net)
-  nonface_val_size = get_size(CUR + '/%s_nonface_val'%net)
+  face_train_size = get_size('data/%s_face_train'%net)
+  face_val_size = get_size('data/%s_face_val'%net)
+  landmark_train_size = get_size('data/%s_landmark_train'%net)
+  landmark_val_size = get_size('data/%s_landmark_val'%net)
+  nonface_train_size = get_size('data/%s_nonface_train'%net)
+  nonface_val_size = get_size('data/%s_nonface_val'%net)
   print 'face train size', face_train_size
   print 'face val size', face_val_size
   print 'landmark train size', landmark_train_size
@@ -56,6 +53,6 @@ def main(args):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('--net_type', type=str, default='p', help='net type')
+  parser.add_argument('--net', type=str, default='p', help='net type')
   args = parser.parse_args()
   main(args)

@@ -2,7 +2,8 @@
 #include <iostream>
 #include <glog/logging.h>
 #include <opencv2/highgui/highgui.hpp>
-#include "detect.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
+#include "detector.hpp"
 
 using namespace cv;
 using namespace std;
@@ -14,6 +15,21 @@ int main(int argc, char *argv[]) {
 
   Detector detector;
   Mat img = cv::imread("../test.jpg", cv::IMREAD_COLOR);
+
+  //vector<Mat> bgr;
+  //cv::split(img, bgr);
+  //Mat a;
+  //int h = img.rows / 2;
+  //int w = img.cols / 2;
+  //cv::resize(img, a, cv::Size(w, h));
+  //for (int i = 0; i < bgr.size(); i++) {
+  //  cv::resize(bgr[i], bgr[i], cv::Size(w, h));
+  //}
+  //Mat b;
+  //cv::merge(bgr, b);
+  //cv::imshow("a", a);
+  //cv::imshow("b", b);
+  //cv::waitKey(0);
 
   cout << "start" << endl;
   vector<FaceBBox> res;

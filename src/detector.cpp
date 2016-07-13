@@ -1,4 +1,4 @@
-#include "detect.hpp"
+#include "detector.hpp"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <caffe/caffe.hpp>
@@ -25,6 +25,8 @@ static const float kONetScoreTh = 0.8;
 
 vector<FaceBBox> Detector::detect(const Mat& img_) {
   Mat img = img_.clone();
+  vector<Mat> bgr;
+  cv::split(img, bgr);
   int height = img.rows;
   int width = img.cols;
   float scale = 1.;
@@ -35,15 +37,18 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
   boost::shared_ptr<caffe::Blob<float> > bbox_offset = pnet->blob_by_name("face_bbox");
   TIMER_BEGIN
   int counter = 0;
-  while (std::min(img.cols, img.rows) > 20) {
+  while (std::min(height, width) > 20) {
     counter++;
     input->Reshape(1, 3, height, width);
     float* input_data = input->mutable_cpu_data();
     for (int i = 0; i < height; i++) {
       for (int j = 0; j < width; j++) {
-        input_data[input->offset(0, 0, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[0]) / 128 - 1;
-        input_data[input->offset(0, 1, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[1]) / 128 - 1;
-        input_data[input->offset(0, 2, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[2]) / 128 - 1;
+        //input_data[input->offset(0, 0, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[0]) / 128 - 1;
+        //input_data[input->offset(0, 1, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[1]) / 128 - 1;
+        //input_data[input->offset(0, 2, i, j)] = static_cast<float>(img.at<cv::Vec3b>(i, j)[2]) / 128 - 1;
+        input_data[input->offset(0, 0, i, j)] = static_cast<float>(bgr[0].at<uchar>(i, j)) / 128 - 1;
+        input_data[input->offset(0, 1, i, j)] = static_cast<float>(bgr[1].at<uchar>(i, j)) / 128 - 1;
+        input_data[input->offset(0, 2, i, j)] = static_cast<float>(bgr[2].at<uchar>(i, j)) / 128 - 1;
       }
     }
     TIMER_BEGIN
@@ -77,7 +82,10 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
     scale *= factor;
     height = height / factor;
     width = width / factor;
-    cv::resize(img, img, cv::Size(width, height));
+    //cv::resize(img, img, cv::Size(width, height));
+    cv::resize(bgr[0], bgr[0], cv::Size(width, height));
+    cv::resize(bgr[1], bgr[1], cv::Size(width, height));
+    cv::resize(bgr[2], bgr[2], cv::Size(width, height));
   }
   cout << counter << endl;
   cout << TIMER_NOW << endl;

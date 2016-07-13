@@ -12,10 +12,10 @@ import numpy as np
 from utils import load_wider, load_celeba
 from utils import calc_IoU, calc_IoUs, check_bbox
 from utils import draw_landmark, show_image
-from utils import get_logger
+from utils import get_logger, get_face_size
 
 
-READER_N = 4
+READER_N = 8
 RANDOM_FACE_N = 10
 FACE_OVERLAP_THRESHOLD = 0.65
 NONFACE_OVERLAP_THRESHOLD = 0.3
@@ -25,9 +25,14 @@ q_in = [multiprocessing.Queue() for i in range(READER_N)]
 q_out = multiprocessing.Queue(1024)
 
 logger = get_logger()
+net_type = 'p'
 
 G2 = 2*1024*1024*1024
 G4 = 2*G2
+G8 = 2*G4
+G12 = 3*G4
+G16 = 2*G8
+G24 = 2*G12
 
 
 def fill_queues(data, qs):
@@ -39,6 +44,7 @@ def fill_queues(data, qs):
 
 def remove_if_exists(db):
   if os.path.exists(db):
+    logger.info('remove %s'%db)
     shutil.rmtree(db)
 
 
@@ -103,7 +109,8 @@ def face_reader_func(q_in, q_out):
     for bbox, offset in zip(bboxes, offsets):
       x, y, w, h = bbox
       face = img[y:y+h, x:x+w, :]
-      face = cv2.resize(face, (12, 12))
+      face_size = get_face_size(net_type)
+      face = cv2.resize(face, (face_size, face_size))
       face = face.transpose(2, 0, 1)
       face_data = face.tostring()  # uint8
       offset_data = np.asarray(offset, dtype=np.float32).tostring()
@@ -117,7 +124,7 @@ def face_reader_func(q_in, q_out):
 
 
 def face_writer_func(q_out, db_name):
-  map_size = G2
+  map_size = G8 if net_type == 'o' else G2
   db = lmdb.open(db_name, map_size=map_size)
   counter = 0
   with db.begin(write=True) as txn:
@@ -161,9 +168,9 @@ def gen_face():
     writer.join()
 
   logger.info('writing train data, %d images', len(train_data))
-  gen(train_data, '%snet_face_train'%net_type)
+  gen(train_data, 'data/%snet_face_train'%net_type)
   logger.info('writing val data, %d images', len(val_data))
-  gen(val_data, '%snet_face_val'%net_type)
+  gen(val_data, 'data/%snet_face_val'%net_type)
 
 
 # generate landmark face part
@@ -178,11 +185,12 @@ def landmark_reader_func(q_in, q_out):
       continue
     region = img.shape[:-1]
     if not check_bbox(bbox, region):
-      logger.warning('bbox out of range')
+      #logger.warning('bbox out of range')
       continue
     x, y, w, h = bbox
     face = img[y:y+h, x:x+w, :]  # crop
-    face = cv2.resize(face, (12, 12))
+    face_size = get_face_size(net_type)
+    face = cv2.resize(face, (face_size, face_size))
     face = face.transpose(2, 0, 1)
     face_data = face.tostring()  # string for lmdb, uint8
     landmark_data = landmark.tostring()  # float32
@@ -237,9 +245,9 @@ def gen_landmark():
     writer.join()
 
   logger.info('writing train data, %d images', len(train_data))
-  gen(train_data, '%snet_landmark_train'%net_type)
+  gen(train_data, 'data/%snet_landmark_train'%net_type)
   logger.info('writing val data, %d images', len(val_data))
-  gen(val_data, '%snet_landmark_val'%net_type)
+  gen(val_data, 'data/%snet_landmark_val'%net_type)
 
 
 # generate nonface part
@@ -278,7 +286,8 @@ def nonface_reader_func(q_in, q_out):
     for bbox in bboxes:
       x, y, w, h = bbox
       nonface = img[y:y+h, x:x+w, :]
-      nonface = cv2.resize(nonface, (12, 12))
+      nonface_size = get_face_size(net_type)
+      nonface = cv2.resize(nonface, (nonface_size, nonface_size))
       nonface = nonface.transpose(2, 0, 1)
       nonface_data = nonface.tostring()  # uint8
       q_out.put(('data', [nonface_data]))
@@ -291,7 +300,12 @@ def nonface_reader_func(q_in, q_out):
 
 
 def nonface_writer_func(q_out, db_name):
-  map_size = G4
+  if net_type == 'p':
+    map_size = G4
+  elif net_type == 'r':
+    map_size = G12
+  else:
+    map_size = G24
   db = lmdb.open(db_name, map_size=map_size)  # 4G
   counter = 0
   with db.begin(write=True) as txn:
@@ -333,9 +347,9 @@ def gen_nonface():
     writer.join()
 
   logger.info('writing train data, %d images', len(train_data))
-  gen(train_data, '%snet_nonface_train'%net_type)
+  gen(train_data, 'data/%snet_nonface_train'%net_type)
   logger.info('writing val data, %d images', len(val_data))
-  gen(val_data, '%snet_nonface_val'%net_type)
+  gen(val_data, 'data/%snet_nonface_val'%net_type)
 
 
 def main(args):

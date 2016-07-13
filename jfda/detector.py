@@ -7,7 +7,7 @@ os.environ['GLOG_minloglevel'] = '2'
 import cv2
 import caffe
 import numpy as np
-from jfda.utils import nms
+from .utils import nms
 
 
 FACE_PROB_TH = 0.8
@@ -53,15 +53,13 @@ class Detector(object):
             bbox = np.array([x_, y_, w_, h_, prob[i][j]])
             face.append(bbox)
             counter += 1
-
-      print scale, 12*scale, counter
       height = int(height/factor)
       width = int(width/factor)
       scale *= factor
       img = cv2.resize(img, (width, height))
     face = np.asarray(face)
     keep = nms(face, 0.3)
-    face = face[keep, :]
+    face = face[keep, :].copy()
     return face
 
 

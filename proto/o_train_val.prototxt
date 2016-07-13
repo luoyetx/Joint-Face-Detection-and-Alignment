@@ -371,5 +371,5 @@ layer {
   bottom: "face_landmark"
   bottom: "landmark_refined"
   top: "landmark_loss"
-  loss_weight: 0.5
+  loss_weight: 1
 }
