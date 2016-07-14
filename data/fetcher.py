@@ -34,30 +34,39 @@ class BaseGenerator(object):
   """Base Generator
   """
 
-  def __init__(self, db_name, net_type, batch_size):
+  def __init__(self, db_name, net_type, batch_size, shuffle):
     self.db_name = db_name
     self.net_type = net_type
+    self.shuffle = shuffle
     self.batch_size = batch_size
     # load data
-    db = lmdb.open(db_name)
-    with db.begin() as txn:
-      self.data_size = self.get_size(txn)
-      self.epoch_size = self.data_size / self.batch_size
-      self.load_full_data(txn)
-    db.close()
+    self.db = lmdb.open(db_name)
+    self.txn = self.db.begin()
+    self.data_size = self.get_size()
+    self.epoch_size = self.data_size / self.batch_size
+    self.setup()
     # reset status
+    self.start = 0
+    self.end = 0
+    self.shuffle_idx = np.arange(self.data_size)
     self.reset()
 
-  def reset(self):
-    self.batch_start_idx = 0
-    #self.shuffle_idx = np.random.permutation(self.data_size)
-    self.shuffle_idx = np.arange(self.data_size)
+  def __del__(self):
+    self.txn.abort()
+    self.db.close()
 
-  def load_full_data(self, txn):
-    """subclass need to impl, load full data
-    txn: lmdb context
+  def setup(self):
+    """subclass need to impl
     """
     pass
+
+  def reset(self):
+    if self.shuffle:
+      self.start = 0
+      self.shuffle_idx = np.random.permutation(self.data_size)
+    else:
+      self.start = self.end
+      self.shuffle_idx = np.arange(self.data_size)
 
   def get_mini_batch(self, idx):
     """subclass need to impl, generate mini-batch, raise StopIteration if end of datasize
@@ -66,12 +75,12 @@ class BaseGenerator(object):
     """
     pass
 
-  def get_size(self, txn):
+  def get_size(self):
     """subclass need to impl, get data size
     txn: lmdb context
     return: full data size
     """
-    size = int(txn.get('size'))
+    size = int(self.txn.get('size'))
     return size
 
   def __iter__(self):
@@ -81,15 +90,14 @@ class BaseGenerator(object):
     self.next()
 
   def next(self):
-    """subclass need to impl, get mini-batch
+    """
     return: mini-batch
     """
-    start = self.batch_start_idx
-    end = start + self.batch_size
-    self.batch_start_idx = end
-    if end > self.data_size:
+    self.end = self.start + self.batch_size
+    if self.end > self.data_size:
+      self.end -= self.data_size
       raise StopIteration()
-    idx = self.shuffle_idx[start:end]
+    idx = self.shuffle_idx[self.start:self.end]
     mini_batch = self.get_mini_batch(idx)
     return mini_batch
 
@@ -99,99 +107,85 @@ class FaceDataGenerator(BaseGenerator):
   given lmdb file path, generate a batch with size = batch_size each time
   """
 
-  def __init__(self, db_name, net_type='p', batch_size=256):
-    super(FaceDataGenerator, self).__init__(db_name, net_type, batch_size)
-
-  def load_full_data(self, txn):
+  def setup(self):
     face_size = get_face_size(self.net_type)
     bbox_size = 3
-    face_shape = (3, face_size, face_size)
-    bbox_shape = (bbox_size,)
-    self.face_data = np.zeros((self.data_size, 3, face_size, face_size), dtype=np.uint8)
-    self.bbox_data = np.zeros((self.data_size, bbox_size), dtype=np.float32)
-    for i in xrange(self.data_size):
-      face_key = '%08d_data'%i
-      bbox_key = '%08d_offset'%i
-      self.face_data[i] = np.fromstring(txn.get(face_key), dtype=np.uint8).reshape(face_shape)
-      self.bbox_data[i] = np.fromstring(txn.get(bbox_key), dtype=np.float32).reshape(bbox_shape)
+    self.face_shape = (3, face_size, face_size)
+    self.bbox_shape = (bbox_size,)
+    self.face_data = np.zeros((self.batch_size, 3, face_size, face_size), dtype=np.float32)
+    self.bbox_data = np.zeros((self.batch_size, bbox_size), dtype=np.float32)
 
   def get_mini_batch(self, idx):
-    face_data = self.face_data[idx].copy().astype(np.float32)
-    bbox_data = self.bbox_data[idx].copy()
-    face_data = preprocess_face_data(face_data)
-    return (face_data, bbox_data)
+    for i, key in enumerate(idx):
+      face_key = '%08d_data'%key
+      bbox_key = '%08d_offset'%key
+      self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
+      self.bbox_data[i] = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
+    return (self.face_data, self.bbox_data)
 
 
 class LandmarkDataGenerator(BaseGenerator):
   """Landmark Data Generator
   """
 
-  def __init__(self, db_name, net_type='p', batch_size=256):
-    super(LandmarkDataGenerator, self).__init__(db_name, net_type, batch_size)
-
-  def load_full_data(self, txn):
+  def setup(self):
     face_size = get_face_size(self.net_type)
     landmark_size = 10
-    face_shape = (3, face_size, face_size)
-    landmark_shape = (landmark_size,)
-    self.face_data = np.zeros((self.data_size, 3, face_size, face_size), dtype=np.uint8)
-    self.landmark_data = np.zeros((self.data_size, landmark_size), dtype=np.float32)
-    for i in xrange(self.data_size):
-      face_key = '%08d_data'%i
-      landmark_key = '%08d_landmark'%i
-      self.face_data[i] = np.fromstring(txn.get(face_key), dtype=np.uint8).reshape(face_shape)
-      self.landmark_data[i] = np.fromstring(txn.get(landmark_key), dtype=np.float32).reshape(landmark_shape)
+    self.face_shape = (3, face_size, face_size)
+    self.landmark_shape = (landmark_size,)
+    self.face_data = np.zeros((self.batch_size, 3, face_size, face_size), dtype=np.float32)
+    self.landmark_data = np.zeros((self.batch_size, landmark_size), dtype=np.float32)
 
   def get_mini_batch(self, idx):
-    face_data = self.face_data[idx].copy().astype(np.float32)
-    landmark_data = self.landmark_data[idx].copy()
-    face_data = preprocess_face_data(face_data)
-    return (face_data, landmark_data)
+    for i, key in enumerate(idx):
+      face_key = '%08d_data'%key
+      landmark_key = '%08d_landmark'%key
+      self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
+      self.landmark_data[i] = np.fromstring(self.txn.get(landmark_key), dtype=np.float32).reshape(self.landmark_shape)
+    return (self.face_data, self.landmark_data)
 
 
 class NonFaceDataGenerator(BaseGenerator):
   """Nonface Data Generator
   """
 
-  def __init__(self, db_name, net_type='p', batch_size=512):
-    super(NonFaceDataGenerator, self).__init__(db_name, net_type, batch_size)
-
-  def load_full_data(self, txn):
+  def setup(self):
     nonface_size = get_face_size(self.net_type)
-    nonface_shape = (3, nonface_size, nonface_size)
-    self.nonface_data = np.zeros((self.data_size, 3, nonface_size, nonface_size), dtype=np.uint8)
-    for i in xrange(self.data_size):
-      nonface_key = '%08d_data'%i
-      self.nonface_data[i] = np.fromstring(txn.get(nonface_key), dtype=np.uint8).reshape(nonface_shape)
+    self.nonface_shape = (3, nonface_size, nonface_size)
+    self.nonface_data = np.zeros((self.batch_size, 3, nonface_size, nonface_size), dtype=np.float32)
 
   def get_mini_batch(self, idx):
-    nonface_data = self.nonface_data[idx].copy().astype(np.float32)
-    nonface_data = preprocess_face_data(nonface_data)
-    return (nonface_data)
+    for i, key in enumerate(idx):
+      nonface_key = '%08d_data'%i
+      self.nonface_data[i] = np.fromstring(self.txn.get(nonface_key), dtype=np.uint8).reshape(self.nonface_shape)
+    return (self.nonface_data)
 
 
 class BatchGenerator(multiprocessing.Process):
   """generate batches from given dataset, put the batch in the queue for MTDataIter
   """
 
-  def __init__(self, queue, net_type='p',
+  def __init__(self, queue, net_type='p', shuffle=False,
                face_db_name='data/pnet_face_train',
                landmark_db_name='data/pnet_landmark_train',
                nonface_db_name='data/pnet_nonface_train',
-               face_batch_size=126,
-               landmark_batch_size=126,
-               nonface_batch_size=512):
+               face_batch_size=256,
+               landmark_batch_size=256,
+               nonface_batch_size=1024):
     super(BatchGenerator, self).__init__()
     self.queue = queue
     self.face_generator = FaceDataGenerator(db_name=face_db_name,
                                             net_type=net_type,
-                                            batch_size=face_batch_size)
+                                            batch_size=face_batch_size,
+                                            shuffle=shuffle)
     self.landmark_generator = LandmarkDataGenerator(db_name=landmark_db_name,
                                                     net_type=net_type,
-                                                    batch_size=landmark_batch_size)
+                                                    batch_size=landmark_batch_size,
+                                                    shuffle=shuffle)
     self.nonface_generator = NonFaceDataGenerator(db_name=nonface_db_name,
                                                   net_type=net_type,
-                                                  batch_size=nonface_batch_size)
+                                                  batch_size=nonface_batch_size,
+                                                  shuffle=shuffle)
     self.face_batch_size = face_batch_size
     self.landmark_batch_size = landmark_batch_size
     self.nonface_batch_size = nonface_batch_size

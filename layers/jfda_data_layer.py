@@ -29,6 +29,7 @@ class JfdaDataLayer(caffe.Layer):
       layer: "JfdaDataLayer"
       param_str: '{'
                  '  "net_type": "p",'
+                 '  "shuffle": true,'
                  '  "face_db_name": "data/pnet_face_train",'
                  '  "landmark_db_name": "data/pnet_landmark_train",'
                  '  "nonface_db_name": "data/pnet_nonface_train",'
@@ -45,6 +46,7 @@ class JfdaDataLayer(caffe.Layer):
     """
     param = json.loads(self.param_str)
     net_type = param['net_type']
+    shuffle = param['shuffle']
     face_db_name = param['face_db_name']
     landmark_db_name = param['landmark_db_name']
     nonface_db_name = param['nonface_db_name']
@@ -58,6 +60,7 @@ class JfdaDataLayer(caffe.Layer):
 
     kwargs = {
       'net_type': net_type,
+      'shuffle': shuffle,
       'face_db_name': face_db_name,
       'landmark_db_name': landmark_db_name,
       'nonface_db_name': nonface_db_name,
