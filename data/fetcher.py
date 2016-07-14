@@ -20,7 +20,7 @@ import multiprocessing
 import cv2
 import lmdb
 import numpy as np
-from .utils import calc_IoU, get_face_size
+from .utils import get_face_size
 
 
 def preprocess_face_data(face_data):
@@ -30,11 +30,13 @@ def preprocess_face_data(face_data):
   return res
 
 
-class BaseGenerator(object):
+class BaseGenerator(multiprocessing.Process):
   """Base Generator
   """
 
-  def __init__(self, db_name, net_type, batch_size, shuffle):
+  def __init__(self, qout, db_name, net_type, batch_size, shuffle):
+    super(BaseGenerator, self).__init__()
+    self.qout = qout
     self.db_name = db_name
     self.net_type = net_type
     self.shuffle = shuffle
@@ -46,8 +48,8 @@ class BaseGenerator(object):
     self.epoch_size = self.data_size / self.batch_size
     self.setup()
     # reset status
-    self.start = 0
-    self.end = 0
+    self.start_idx = 0
+    self.end_idx = 0
     self.shuffle_idx = np.arange(self.data_size)
     self.reset()
 
@@ -62,10 +64,12 @@ class BaseGenerator(object):
 
   def reset(self):
     if self.shuffle:
-      self.start = 0
+      self.start_idx = 0
+      self.end_idx = self.start_idx + self.batch_size
       self.shuffle_idx = np.random.permutation(self.data_size)
     else:
-      self.start = self.end
+      self.start_idx = self.end_idx
+      self.end_idx = self.start_idx + self.batch_size
       self.shuffle_idx = np.arange(self.data_size)
 
   def get_mini_batch(self, idx):
@@ -83,23 +87,25 @@ class BaseGenerator(object):
     size = int(self.txn.get('size'))
     return size
 
-  def __iter__(self):
-    return self
-
-  def __next__(self):
-    self.next()
-
   def next(self):
     """
     return: mini-batch
     """
-    self.end = self.start + self.batch_size
-    if self.end > self.data_size:
-      self.end -= self.data_size
-      raise StopIteration()
-    idx = self.shuffle_idx[self.start:self.end]
+    self.end_idx = self.start_idx + self.batch_size
+    if self.end_idx > self.data_size:
+      self.end_idx -= self.data_size
+      self.reset()  # reset start_idx and end_idx
+    idx = self.shuffle_idx[self.start_idx:self.end_idx]
+    self.start_idx = self.end_idx  # update
     mini_batch = self.get_mini_batch(idx)
     return mini_batch
+
+  def run(self):
+    """start process
+    """
+    while True:
+      mini_batch = self.next()
+      self.qout.put(mini_batch)
 
 
 class FaceDataGenerator(BaseGenerator):
@@ -121,7 +127,7 @@ class FaceDataGenerator(BaseGenerator):
       bbox_key = '%08d_offset'%key
       self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       self.bbox_data[i] = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
-    return (self.face_data, self.bbox_data)
+    return (self.face_data.copy(), self.bbox_data.copy())
 
 
 class LandmarkDataGenerator(BaseGenerator):
@@ -142,7 +148,7 @@ class LandmarkDataGenerator(BaseGenerator):
       landmark_key = '%08d_landmark'%key
       self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       self.landmark_data[i] = np.fromstring(self.txn.get(landmark_key), dtype=np.float32).reshape(self.landmark_shape)
-    return (self.face_data, self.landmark_data)
+    return (self.face_data.copy(), self.landmark_data.copy())
 
 
 class NonFaceDataGenerator(BaseGenerator):
@@ -156,9 +162,9 @@ class NonFaceDataGenerator(BaseGenerator):
 
   def get_mini_batch(self, idx):
     for i, key in enumerate(idx):
-      nonface_key = '%08d_data'%i
+      nonface_key = '%08d_data'%key
       self.nonface_data[i] = np.fromstring(self.txn.get(nonface_key), dtype=np.uint8).reshape(self.nonface_shape)
-    return (self.nonface_data)
+    return (self.nonface_data.copy())
 
 
 class BatchGenerator(multiprocessing.Process):
@@ -173,19 +179,8 @@ class BatchGenerator(multiprocessing.Process):
                landmark_batch_size=256,
                nonface_batch_size=1024):
     super(BatchGenerator, self).__init__()
-    self.queue = queue
-    self.face_generator = FaceDataGenerator(db_name=face_db_name,
-                                            net_type=net_type,
-                                            batch_size=face_batch_size,
-                                            shuffle=shuffle)
-    self.landmark_generator = LandmarkDataGenerator(db_name=landmark_db_name,
-                                                    net_type=net_type,
-                                                    batch_size=landmark_batch_size,
-                                                    shuffle=shuffle)
-    self.nonface_generator = NonFaceDataGenerator(db_name=nonface_db_name,
-                                                  net_type=net_type,
-                                                  batch_size=nonface_batch_size,
-                                                  shuffle=shuffle)
+    self.q_to = queue
+    self.q_from = [multiprocessing.Queue(32) for i in range(3)]
     self.face_batch_size = face_batch_size
     self.landmark_batch_size = landmark_batch_size
     self.nonface_batch_size = nonface_batch_size
@@ -206,6 +201,36 @@ class BatchGenerator(multiprocessing.Process):
     # face mask
     self.mask_shape = (2,)
     self.mask_data = np.zeros((self.batch_size, 2), dtype=np.float32)
+    # create generator
+    self.face_generator = FaceDataGenerator(self.q_from[0],
+                                            db_name=face_db_name,
+                                            net_type=net_type,
+                                            batch_size=face_batch_size,
+                                            shuffle=shuffle)
+    self.landmark_generator = LandmarkDataGenerator(self.q_from[1],
+                                                    db_name=landmark_db_name,
+                                                    net_type=net_type,
+                                                    batch_size=landmark_batch_size,
+                                                    shuffle=shuffle)
+    self.nonface_generator = NonFaceDataGenerator(self.q_from[2],
+                                                  db_name=nonface_db_name,
+                                                  net_type=net_type,
+                                                  batch_size=nonface_batch_size,
+                                                  shuffle=shuffle)
+    # launch processes
+    self.face_generator.start()
+    self.landmark_generator.start()
+    self.nonface_generator.start()
+
+    def cleanup():
+      self.face_generator.terminate()
+      self.landmark_generator.terminate
+      self.nonface_generator.terminate()
+      self.face_generator.join()
+      self.landmark_generator.join()
+      self.nonface_generator.join()
+    import atexit
+    atexit.register(cleanup)
 
   def gen(self):
     """generate one batch, data layout [face, landmark, nonface]
@@ -216,7 +241,7 @@ class BatchGenerator(multiprocessing.Process):
     """
     # face
     start, end = 0, self.face_batch_size
-    face_data, bbox_data = self.next_face_data().next()  # next() is needed for iter generator
+    face_data, bbox_data = self.next_face_data()
     self.data[start:end] = face_data
     self.label_data[start:end] = 1
     self.bbox_data[start:end] = bbox_data
@@ -225,7 +250,7 @@ class BatchGenerator(multiprocessing.Process):
     self.mask_data[start:end, 1] = 1
     # landmark
     start, end = self.face_batch_size, self.face_batch_size+self.landmark_batch_size
-    face_data, landmark_data = self.next_landmark_data().next()
+    face_data, landmark_data = self.next_landmark_data()
     self.data[start:end] = face_data
     self.label_data[start:end] = 1
     self.bbox_data[start:end] = 0
@@ -234,7 +259,7 @@ class BatchGenerator(multiprocessing.Process):
     self.mask_data[start:end, 1] = 0
     # nonface
     start, end = self.face_batch_size+self.landmark_batch_size, self.batch_size
-    nonface_data = self.next_nonface_data().next()
+    nonface_data = self.next_nonface_data()
     self.data[start:end] = nonface_data
     self.label_data[start:end] = 0
     self.bbox_data[start:end] = 0
@@ -251,30 +276,24 @@ class BatchGenerator(multiprocessing.Process):
   def next_face_data(self):
     """generate face data in a batch
     """
-    while True:
-      self.face_generator.reset()
-      for batch in self.face_generator:
-        yield batch  # face_data, bbox_data
+    # face_data, bbox_data
+    return self.q_from[0].get()
 
   def next_landmark_data(self):
     """generate landmark data in a batch
     """
-    while True:
-      self.landmark_generator.reset()
-      for batch in self.landmark_generator:
-        yield batch  # face_data, landmark_data
+    # face_data, landmark_data
+    return self.q_from[1].get()
 
   def next_nonface_data(self):
     """generate nonface data in a batch
     """
-    while True:
-      self.nonface_generator.reset()
-      for batch in self.nonface_generator:
-        yield batch  # nonface_data
+    # nonface_data
+    return self.q_from[2].get()
 
   def run(self):
     """run
     """
     while True:
       batch = self.gen()
-      self.queue.put(batch)
+      self.q_to.put(batch)
