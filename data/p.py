@@ -370,4 +370,5 @@ if __name__ == '__main__':
   parser.add_argument('--landmark', action='store_true', help='generate landmark data')
   parser.add_argument('--nonface', action='store_true', help='generate nonface data')
   args = parser.parse_args()
+  assert args.net in  ['p', 'r', 'o']
   main(args)

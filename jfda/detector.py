@@ -19,7 +19,7 @@ class Detector(object):
   def __init__(self, net, model):
     """init detector
     """
-    self.pnet = caffe.Net(net, model, caffe.TEST)
+    self.pnet = caffe.Net(net, caffe.TEST, weights=model)
 
   def detect(self, img):
     """detect face

@@ -2,10 +2,12 @@
 # coding = utf-8
 #
 # generate batch for the network.
+#
 # There're three type of data
 #  1. face with bbox offset
 #  2. face with landmark
 #  3. non-face
+#
 # We generate this data in a batch with face_batch_size, landmark_batch_size and nonface_batch_size.
 #  1. data, this is face data resized to 3 x ? x ?, where ? is 12 or 24 or 48
 #  2. bbox, bbox offset, not all data type has this field
@@ -15,6 +17,19 @@
 #     2. face with bbox offset, mask[0] = 0, mask[1] = 1, landmark data need to copy from network output
 #     3. face with landmark offset, mask[0] = 1, mask[1] = 0, bbox offset data need to copy from network output
 #     4. nonface, mask[0] = mask[1] = 1, both need to copy from network output
+#  5. multiprocessing is used for speed up. Every data type has a process to load data.
+#     Pipeline:
+#       MiniBatch_Queue
+#             ^                                      |<<<-------- FaceBatch_Queue --------<<< FaceGenerator
+#             |                                      |
+#             |<<<-------- BatchGenerator --------<<<|<<<-------- LandmarkBatch_Queue ----<<< LandmarkGenerator
+#                                                    |
+#                                                    |<<<-------- NonFaceBatch_Queue -----<<< NonFaceGenerator
+#     Performance:
+#       1. Random access the lmdb data can cause speed problem when no FaceBatch_Queue, etc.
+#       2. Sequential access the lmdb data give the best performance.
+#       3. The pipeline above gives almost the same performace with Random access or Seqential access the lmdb data.
+#
 
 import multiprocessing
 import cv2
@@ -127,7 +142,7 @@ class FaceDataGenerator(BaseGenerator):
       bbox_key = '%08d_offset'%key
       self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       self.bbox_data[i] = np.fromstring(self.txn.get(bbox_key), dtype=np.float32).reshape(self.bbox_shape)
-    return (self.face_data.copy(), self.bbox_data.copy())
+    return (self.face_data.copy(), self.bbox_data.copy())  # must copy due to Queue.put()
 
 
 class LandmarkDataGenerator(BaseGenerator):
@@ -148,7 +163,7 @@ class LandmarkDataGenerator(BaseGenerator):
       landmark_key = '%08d_landmark'%key
       self.face_data[i] = np.fromstring(self.txn.get(face_key), dtype=np.uint8).reshape(self.face_shape)
       self.landmark_data[i] = np.fromstring(self.txn.get(landmark_key), dtype=np.float32).reshape(self.landmark_shape)
-    return (self.face_data.copy(), self.landmark_data.copy())
+    return (self.face_data.copy(), self.landmark_data.copy())  # must copy due to Queue.put()
 
 
 class NonFaceDataGenerator(BaseGenerator):
@@ -164,7 +179,7 @@ class NonFaceDataGenerator(BaseGenerator):
     for i, key in enumerate(idx):
       nonface_key = '%08d_data'%key
       self.nonface_data[i] = np.fromstring(self.txn.get(nonface_key), dtype=np.uint8).reshape(self.nonface_shape)
-    return (self.nonface_data.copy())
+    return (self.nonface_data.copy())  # must copy due to Queue.put()
 
 
 class BatchGenerator(multiprocessing.Process):
@@ -271,7 +286,7 @@ class BatchGenerator(multiprocessing.Process):
     return (self.data.copy(), self.label_data.copy(),
             self.bbox_data.copy(), self.landmark_data.copy(),
             self.mask_data[:, 0].copy(),
-            self.mask_data[:, 1].copy())
+            self.mask_data[:, 1].copy())  # must copy due to Queue.put()
 
   def next_face_data(self):
     """generate face data in a batch

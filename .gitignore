@@ -1,4 +1,5 @@
 build
+tmp
 data/CelebA
 data/WIDER
 

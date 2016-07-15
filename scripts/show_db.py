@@ -37,9 +37,10 @@ def main(args):
   print 'nonface val size', nonface_val_size
   print ''
 
-  face_batch_size = 256
-  landmark_batch_size = 256
-  nonface_batch_size = 1024
+  base_batch_size = args.size
+  face_batch_size = base_batch_size
+  landmark_batch_size = base_batch_size
+  nonface_batch_size = 4 * base_batch_size
   print 'face batch size', face_batch_size
   print 'face train epoch size', face_train_size / face_batch_size
   print 'face val epoch size', face_val_size / face_batch_size
@@ -54,5 +55,7 @@ def main(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--net', type=str, default='p', help='net type')
+  parser.add_argument('--size', type=int, default=256, help='base batch size')
   args = parser.parse_args()
+  assert args.net in  ['p', 'r', 'o']
   main(args)
