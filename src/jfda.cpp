@@ -1,4 +1,4 @@
-#include "detector.hpp"
+#include "jfda.hpp"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <caffe/caffe.hpp>
@@ -15,18 +15,21 @@ Detector::Detector() {
   pnet->CopyTrainedLayersFromBinaryProto("../result/p.caffemodel");
   rnet = new caffe::Net<float>("../proto/r.prototxt", caffe::TEST);
   rnet->CopyTrainedLayersFromBinaryProto("../result/r.caffemodel");
+  onet = new caffe::Net<float>("../proto/o.prototxt", caffe::TEST);
+  onet->CopyTrainedLayersFromBinaryProto("../result/o.caffemodel");
 }
 
 Detector::~Detector() {
   delete pnet;
   delete rnet;
+  delete onet;
 }
 
-static const float kPNetScoreTh = 0.8;
+static const float kPNetScoreTh = 0.5;
 static const float kRNetScoreTh = 0.8;
-static const float kONetScoreTh = 0.8;
+static const float kONetScoreTh = 0.9;
 
-vector<FaceBBox> Detector::detect(const Mat& img_) {
+vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   Mat img = img_.clone();
   //vector<Mat> bgr;
   //cv::split(img, bgr);
@@ -57,7 +60,7 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
     }
     TIMER_BEGIN
     pnet->Forward();
-    cout << TIMER_NOW << endl;
+    //cout << TIMER_NOW << endl;
     TIMER_END
     int h, w;
     h = face_prob->shape(2);
@@ -91,10 +94,14 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
     //cv::resize(bgr[1], bgr[1], cv::Size(width, height));
     //cv::resize(bgr[2], bgr[2], cv::Size(width, height));
   }
-  cout << counter << endl;
-  cout << TIMER_NOW << endl;
+  //cout << counter << endl;
+  //cout << TIMER_NOW << endl;
   TIMER_END
   res = nms(res);
+
+  if (level <= 1) {
+    return res;
+  }
 
   // rnet
   int n = res.size();
@@ -124,7 +131,7 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
   }
   TIMER_BEGIN
   rnet->Forward();
-  cout << "rnet forward time " << TIMER_NOW << endl;
+  //cout << "rnet forward time " << TIMER_NOW << endl;
   TIMER_END
 
   float* face_prob_data = face_prob->mutable_cpu_data();
@@ -146,7 +153,63 @@ vector<FaceBBox> Detector::detect(const Mat& img_) {
   }
 
   r_res = nms(r_res);
-  return r_res;
+
+  if (level <= 2) {
+    return r_res;
+  }
+
+  // onet
+  n = r_res.size();
+  input = onet->blob_by_name("data");
+  face_prob = onet->blob_by_name("face_prob");
+  bbox_offset = onet->blob_by_name("face_bbox");
+  input->Reshape(n, 3, 48, 48);
+  for (int k = 0; k < n; k++) {
+    float* input_data = input->mutable_cpu_data();
+    Mat patch;
+    float x = res[k].x;
+    float y = res[k].y;
+    float w = res[k].w;
+    float h = res[k].h;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (x + w > img_.cols) w = img_.cols - x;
+    if (y + h > img_.rows) h = img_.rows - y;
+    cv::resize(img_(cv::Rect(x, y, w, h)), patch, cv::Size(48, 48));
+    for (int i = 0; i < 48; i++) {
+      for (int j = 0; j < 48; j++) {
+        input_data[input->offset(k, 0, i, j)] = static_cast<float>(patch.at<cv::Vec3b>(i, j)[0]) / 128 - 1;
+        input_data[input->offset(k, 1, i, j)] = static_cast<float>(patch.at<cv::Vec3b>(i, j)[1]) / 128 - 1;
+        input_data[input->offset(k, 2, i, j)] = static_cast<float>(patch.at<cv::Vec3b>(i, j)[2]) / 128 - 1;
+      }
+    }
+  }
+  TIMER_BEGIN
+    onet->Forward();
+    //cout << "onet forward time " << TIMER_NOW << endl;
+  TIMER_END
+
+  face_prob_data = face_prob->mutable_cpu_data();
+  bbox_offset_data = bbox_offset->mutable_cpu_data();
+  vector<FaceBBox> o_res;
+  for (int i = 0; i < n; i++) {
+    float prob = face_prob_data[face_prob->offset(i, 1, 0, 0)];
+    if (prob > kONetScoreTh) {
+      float dx, dy, ds;
+      dx = bbox_offset_data[bbox_offset->offset(i, 0, 0, 0)];
+      dy = bbox_offset_data[bbox_offset->offset(i, 1, 0, 0)];
+      ds = bbox_offset_data[bbox_offset->offset(i, 2, 0, 0)];
+      res[i].x = res[i].x + res[i].w * dx;
+      res[i].y = res[i].y + res[i].h * dy;
+      res[i].w = res[i].w * exp(ds);
+      res[i].h = res[i].h * exp(ds);
+      o_res.push_back(res[i]);
+    }
+  }
+
+  o_res = nms(o_res);
+
+  return o_res;
 }
 
 vector<FaceBBox> nms(vector<FaceBBox>& bboxes, float overlap) {

@@ -48,6 +48,22 @@ def plot_score(scores, net):
   plot(pos_val_scores, neg_val_scores, 'tmp/%snet_dis_val.png'%net, data_type='val', log=False)
   plot(pos_val_scores, neg_val_scores, 'tmp/%snet_dis_val_log.png'%net, data_type='val', log=True)
 
+  # threshold for TP, TN
+  for th in np.arange(0, 1, 0.02):
+    logger.info('Threshold = %f'%th)
+    logger.info("=== Train ===")
+    tp = float(np.sum(pos_train_scores > th)) / len(pos_train_scores)
+    tn = float(np.sum(neg_train_scores < th)) / len(neg_train_scores)
+    logger.info('TP: %f'%tp)
+    logger.info('TN: %f'%tn)
+    logger.info("=== Train ===")
+    logger.info("=== Val ===")
+    tp = float(np.sum(pos_val_scores > th)) / len(pos_val_scores)
+    tn = float(np.sum(neg_val_scores < th)) / len(neg_val_scores)
+    logger.info('TP: %f'%tp)
+    logger.info('TN: %f'%tn)
+    logger.info("=== Val ===")
+
 
 def main(args):
   # if preload
@@ -66,7 +82,7 @@ def main(args):
   nonface_train = 'data/%snet_nonface_train'%net
   nonface_val = 'data/%snet_nonface_val'%net
 
-  cnn = caffe.Net('proto/p.prototxt', caffe.TEST, weights='result/p.caffemodel')
+  cnn = caffe.Net('proto/%s.prototxt'%net, caffe.TEST, weights='result/%s.caffemodel'%net)
 
   def eval_db(db_name):
     """eval cnn over db, return face prob score
@@ -92,7 +108,10 @@ def main(args):
           face_data[j-start] = np.fromstring(txn.get(key), dtype=np.uint8).reshape(face_shape).astype(np.float32)
         cnn.blobs['data'].data[...] = (face_data - 128) / 128
         cnn.forward()
-        scores[start:end] = cnn.blobs['face_prob'].data[:, 1, 0, 0]
+        if net == 'p':
+          scores[start:end] = cnn.blobs['face_prob'].data[:, 1, 0, 0]
+        else:
+          scores[start:end] = cnn.blobs['face_prob'].data[:, 1]
     db.close()
     return scores
 

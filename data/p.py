@@ -260,13 +260,17 @@ def random_crop_nonface(img, face_bboxes, n):
     :return nonface_bboxes: nonface region with size n
     """
     nonface_bboxes = []
-    height, width = img.shape[:-1]
+    region = img.shape[:-1]
+    height, width = region
     range_x = width - 12
     range_y = height - 12
+    win_size = [12, 24, 48, 64, 96]
     while len(nonface_bboxes) < n:
       x, y = np.random.randint(range_x), np.random.randint(range_y)
-      w = h = np.random.randint(low=12, high=min(width - x, height - y))
+      w = h = np.random.choice(win_size)
       nonface_bbox = [x, y, w, h]
+      if not check_bbox(nonface_bbox, region):
+        continue
       use_it = True
       for face_bbox in face_bboxes:
         if calc_IoU(nonface_bbox, face_bbox) > NONFACE_OVERLAP_THRESHOLD:

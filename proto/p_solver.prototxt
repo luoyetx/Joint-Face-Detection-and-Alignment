@@ -10,12 +10,12 @@ weight_decay: 0.0005
 
 lr_policy: "step"
 gamma: 0.5
-stepsize: 5000
+stepsize: 25000
 
 display: 500
 average_loss: 500
 
-max_iter: 50000
+max_iter: 100000
 snapshot: 5000
 snapshot_prefix: "result/pnet"
 

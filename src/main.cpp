@@ -3,7 +3,7 @@
 #include <glog/logging.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "detector.hpp"
+#include "jfda.hpp"
 
 using namespace cv;
 using namespace std;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   cout << "start" << endl;
   vector<FaceBBox> res;
   TIMER_BEGIN
-  res = detector.detect(img);
+  res = detector.detect(img, 3);
   cout << TIMER_NOW << endl;
   TIMER_END
   cout << "end\t" << endl;

@@ -23,7 +23,7 @@ class Detector {
   Detector();
   ~Detector();
 
-  std::vector<FaceBBox> detect(const cv::Mat& img);
+  std::vector<FaceBBox> detect(const cv::Mat& img, int level = 1);
 
  private:
   caffe::Net<float>* pnet;

@@ -30,6 +30,7 @@ class JfdaDataLayer(caffe.Layer):
       param_str: '{'
                  '  "net_type": "p",'
                  '  "shuffle": true,'
+                 '  "is_train": true,'
                  '  "face_db_name": "data/pnet_face_train",'
                  '  "landmark_db_name": "data/pnet_landmark_train",'
                  '  "nonface_db_name": "data/pnet_nonface_train",'
@@ -39,6 +40,8 @@ class JfdaDataLayer(caffe.Layer):
                  '}'
     }
   }
+
+  if nonface_db_name == "None" then we will mining directly from image data due to is_train field
   """
 
   def setup(self, bottom, top):
