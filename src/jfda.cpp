@@ -38,7 +38,7 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   cv::resize(img, img, cv::Size(width, height));
   float scale = 2.;
   float factor = 1.4;
-  vector<FaceBBox> res;
+  vector<FaceBBox> p_res;
   boost::shared_ptr<caffe::Blob<float> > input = pnet->blob_by_name("data");
   boost::shared_ptr<caffe::Blob<float> > face_prob = pnet->blob_by_name("face_prob");
   boost::shared_ptr<caffe::Blob<float> > bbox_offset = pnet->blob_by_name("face_bbox");
@@ -81,7 +81,7 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
           bbox.w = bbox.w * exp(bbox_offset_data[bbox_offset->offset(0, 2, i, j)]);
           bbox.h = bbox.h * exp(bbox_offset_data[bbox_offset->offset(0, 2, i, j)]);
           bbox.score = prob;
-          res.push_back(bbox);
+          p_res.push_back(bbox);
         }
       }
     }
@@ -97,14 +97,14 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   //cout << counter << endl;
   //cout << TIMER_NOW << endl;
   TIMER_END
-  res = nms(res);
+  p_res = nms(p_res);
 
-  if (level <= 1) {
-    return res;
+  if (level <= 1 || p_res.size() == 0) {
+    return p_res;
   }
 
   // rnet
-  int n = res.size();
+  int n = p_res.size();
   input = rnet->blob_by_name("data");
   face_prob = rnet->blob_by_name("face_prob");
   bbox_offset = rnet->blob_by_name("face_bbox");
@@ -112,10 +112,10 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   for (int k = 0; k < n; k++) {
     float* input_data = input->mutable_cpu_data();
     Mat patch;
-    float x = res[k].x;
-    float y = res[k].y;
-    float w = res[k].w;
-    float h = res[k].h;
+    float x = p_res[k].x;
+    float y = p_res[k].y;
+    float w = p_res[k].w;
+    float h = p_res[k].h;
     if (x < 0) x = 0;
     if (y < 0) y = 0;
     if (x + w > img_.cols) w = img_.cols - x;
@@ -144,17 +144,18 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
       dx = bbox_offset_data[bbox_offset->offset(i, 0, 0, 0)];
       dy = bbox_offset_data[bbox_offset->offset(i, 1, 0, 0)];
       ds = bbox_offset_data[bbox_offset->offset(i, 2, 0, 0)];
-      res[i].x = res[i].x + res[i].w * dx;
-      res[i].y = res[i].y + res[i].h * dy;
-      res[i].w = res[i].w * exp(ds);
-      res[i].h = res[i].h * exp(ds);
-      r_res.push_back(res[i]);
+      p_res[i].x = p_res[i].x + p_res[i].w * dx;
+      p_res[i].y = p_res[i].y + p_res[i].h * dy;
+      p_res[i].w = p_res[i].w * exp(ds);
+      p_res[i].h = p_res[i].h * exp(ds);
+      p_res[i].score = prob;
+      r_res.push_back(p_res[i]);
     }
   }
 
   r_res = nms(r_res);
 
-  if (level <= 2) {
+  if (level <= 2 || r_res.size() == 0) {
     return r_res;
   }
 
@@ -167,10 +168,10 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   for (int k = 0; k < n; k++) {
     float* input_data = input->mutable_cpu_data();
     Mat patch;
-    float x = res[k].x;
-    float y = res[k].y;
-    float w = res[k].w;
-    float h = res[k].h;
+    float x = r_res[k].x;
+    float y = r_res[k].y;
+    float w = r_res[k].w;
+    float h = r_res[k].h;
     if (x < 0) x = 0;
     if (y < 0) y = 0;
     if (x + w > img_.cols) w = img_.cols - x;
@@ -199,11 +200,12 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
       dx = bbox_offset_data[bbox_offset->offset(i, 0, 0, 0)];
       dy = bbox_offset_data[bbox_offset->offset(i, 1, 0, 0)];
       ds = bbox_offset_data[bbox_offset->offset(i, 2, 0, 0)];
-      res[i].x = res[i].x + res[i].w * dx;
-      res[i].y = res[i].y + res[i].h * dy;
-      res[i].w = res[i].w * exp(ds);
-      res[i].h = res[i].h * exp(ds);
-      o_res.push_back(res[i]);
+      r_res[i].x = r_res[i].x + r_res[i].w * dx;
+      r_res[i].y = r_res[i].y + r_res[i].h * dy;
+      r_res[i].w = r_res[i].w * exp(ds);
+      r_res[i].h = r_res[i].h * exp(ds);
+      r_res[i].score = prob;
+      o_res.push_back(r_res[i]);
     }
   }
 
@@ -235,7 +237,7 @@ vector<FaceBBox> nms(vector<FaceBBox>& bboxes, float overlap) {
     if (flag[i]) {
       merged.push_back(bboxes[i]);
       for (int j = i + 1; j < n; j++) {
-        if (flag[i]) {
+        if (flag[j]) {
           float x1 = max(bboxes[i].x, bboxes[j].x);
           float y1 = max(bboxes[i].y, bboxes[j].y);
           float x2 = min(bboxes[i].x + bboxes[i].w, bboxes[j].x + bboxes[j].w);

@@ -145,6 +145,13 @@ def load_celeba():
   return result
 
 
+def calc_offset(bbox, gt_bbox):
+  dx = float(gt_bbox[0] - bbox[0]) / bbox[2]
+  dy = float(gt_bbox[1] - bbox[1]) / bbox[3]
+  ds = np.log(float(gt_bbox[2]) / bbox[2])
+  return [dx, dy, ds]
+
+
 def calc_IoU(bbox1, bbox2):
   """calculate IoU of bbox1 and bbox2
   """

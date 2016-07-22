@@ -13,7 +13,8 @@ layer {
     layer: "JfdaDataLayer"
     param_str: '{'
                '  "net_type": "r",'
-               '  "shuffle": true,'
+               '  "shuffle": false,'
+               '  "is_train": true,'
                '  "face_db_name": "data/rnet_face_train",'
                '  "landmark_db_name": "data/rnet_landmark_train",'
                '  "nonface_db_name": "data/rnet_nonface_train",'
@@ -40,7 +41,8 @@ layer {
     layer: "JfdaDataLayer"
     param_str: '{'
                '  "net_type": "r",'
-               '  "shuffle": true,'
+               '  "shuffle": false,'
+               '  "is_train": false,'
                '  "face_db_name": "data/rnet_face_val",'
                '  "landmark_db_name": "data/rnet_landmark_val",'
                '  "nonface_db_name": "data/rnet_nonface_val",'

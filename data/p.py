@@ -19,7 +19,7 @@ READER_N = 8
 RANDOM_FACE_N = 10
 FACE_OVERLAP_THRESHOLD = 0.65
 NONFACE_OVERLAP_THRESHOLD = 0.3
-NONFACE_PER_IMAGE = 200
+NONFACE_PER_IMAGE = 500
 
 q_in = [multiprocessing.Queue() for i in range(READER_N)]
 q_out = multiprocessing.Queue(1024)
@@ -267,7 +267,8 @@ def random_crop_nonface(img, face_bboxes, n):
     win_size = [12, 24, 48, 64, 96]
     while len(nonface_bboxes) < n:
       x, y = np.random.randint(range_x), np.random.randint(range_y)
-      w = h = np.random.choice(win_size)
+      w = h = np.random.randint(low=12, high=min(width - x, height - y))
+      # w = h = np.random.choice(win_size)
       nonface_bbox = [x, y, w, h]
       if not check_bbox(nonface_bbox, region):
         continue
@@ -305,7 +306,7 @@ def nonface_reader_func(q_in, q_out):
 
 def nonface_writer_func(q_out, db_name):
   if net_type == 'p':
-    map_size = G4
+    map_size = G12
   elif net_type == 'r':
     map_size = G12
   else:

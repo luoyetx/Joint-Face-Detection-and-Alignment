@@ -2,6 +2,7 @@ build
 tmp
 data/CelebA
 data/WIDER
+data/fddb
 
 *.caffemodel
 *.solverstate
