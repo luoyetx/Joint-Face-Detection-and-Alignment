@@ -18,6 +18,9 @@ struct FaceBBox {
   float landmark[10];
 };
 
+void SetGpu();
+void JLOG(const char* fmt, ...);
+
 class Detector {
  public:
   Detector();

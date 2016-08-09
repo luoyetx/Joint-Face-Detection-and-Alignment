@@ -16,6 +16,8 @@ NONFACE_OVERLAP_THRESHOLD = 0.3
 logger = get_logger()
 net_type = 'r'
 
+UPPER = 6000000
+
 G2 = 2*1024*1024*1024
 G4 = 2*G2
 G8 = 2*G4
@@ -140,6 +142,7 @@ def nonface_writer(q_out_nonface, db_name):
       if stat == 'finish':
         txn.put('size', str(counter))
         break
+      if counter >= UPPER: continue
       face_data = item[0]
       face_key = '%08d_data'%counter
       txn.put(face_key, face_data)

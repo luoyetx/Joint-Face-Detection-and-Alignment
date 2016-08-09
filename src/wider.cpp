@@ -40,13 +40,13 @@ void detect(vector<string> &paths, string out, int level) {
     detector_pool[i] = new jfda::Detector();
   }
 
-  cout << "Start Detecting" << endl;
+  //cout << "Start Detecting" << endl;
+  jfda::JLOG("Start Detecting");
   int counter = 0;
 
   int n = paths.size();
-  n = 200;
   vector<vector<jfda::FaceBBox> > result(n);
-  //#pragma omp parallel for
+  #pragma omp parallel for
   for (int i = 0; i < n; i++) {
     int thread_id = omp_get_thread_num();
     jfda::Detector* detector = detector_pool[thread_id];
@@ -54,18 +54,19 @@ void detect(vector<string> &paths, string out, int level) {
     Mat img = imread(paths[i], CV_LOAD_IMAGE_COLOR);
     result[i] = detector->detect(img, level);
 
-    for (int j = 0; j < result[i].size(); j++) {
-      jfda::FaceBBox bbox = result[i][j];
-      rectangle(img, Rect(bbox.x, bbox.y, bbox.w, bbox.h), Scalar(0, 0, 255));
-    }
-    imshow("img", img);
-    waitKey(0);
+    //for (int j = 0; j < result[i].size(); j++) {
+    //  jfda::FaceBBox bbox = result[i][j];
+    //  rectangle(img, Rect(bbox.x, bbox.y, bbox.w, bbox.h), Scalar(0, 0, 255));
+    //}
+    //imshow("img", img);
+    //waitKey(0);
 
     #pragma omp critical
     {
       counter++;
       if (counter % 100 == 0) {
-        cout << "Processing " << counter << endl;
+        //cout << "Processing " << counter << endl;
+        jfda::JLOG("Processing %d", counter);
       }
     }
   }
@@ -93,6 +94,9 @@ int main(int argc, char *argv[]) {
   vector<string> train_data = load_wider("../tmp/wider_train.txt");
   cout << "Loading val data" << endl;
   vector<string> val_data = load_wider("../tmp/wider_val.txt");
-  detect(train_data, "../tmp/wider_p_train.txt", 1);
-  detect(val_data, "../tmp/wider_p_val.txt", 1);
+
+  jfda::SetGpu();
+
+  detect(train_data, "../tmp/wider_o_train.txt", 2);
+  detect(val_data, "../tmp/wider_o_val.txt", 2);
 }

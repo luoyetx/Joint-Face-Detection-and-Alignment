@@ -16,10 +16,10 @@ from utils import get_logger, get_face_size
 
 
 READER_N = 8
-RANDOM_FACE_N = 10
-FACE_OVERLAP_THRESHOLD = 0.65
+RANDOM_FACE_N = 15
+FACE_OVERLAP_THRESHOLD = 0.4
 NONFACE_OVERLAP_THRESHOLD = 0.3
-NONFACE_PER_IMAGE = 500
+NONFACE_PER_IMAGE = 200
 
 q_in = [multiprocessing.Queue() for i in range(READER_N)]
 q_out = multiprocessing.Queue(1024)
@@ -33,6 +33,7 @@ G8 = 2*G4
 G12 = 3*G4
 G16 = 2*G8
 G24 = 2*G12
+G32 = 2*G16
 
 
 def fill_queues(data, qs):
@@ -115,7 +116,7 @@ def face_reader_func(q_in, q_out):
       face_data = face.tostring()  # uint8
       offset_data = np.asarray(offset, dtype=np.float32).tostring()
       q_out.put(('data', [face_data, offset_data]))
-    # # for debug
+    # for debug
     # for bbox in bboxes:
     #   x, y, w, h = bbox
     #   cv2.rectangle(img, (x, y), (x+w, y+h), (0,0,255), 1)
@@ -124,7 +125,12 @@ def face_reader_func(q_in, q_out):
 
 
 def face_writer_func(q_out, db_name):
-  map_size = G8 if net_type == 'o' else G2
+  if net_type == 'p':
+    map_size = G2
+  elif net_type == 'r':
+    map_size = G4
+  else:
+    map_size = G16
   db = lmdb.open(db_name, map_size=map_size)
   counter = 0
   with db.begin(write=True) as txn:
@@ -253,33 +259,33 @@ def gen_landmark():
 # generate nonface part
 
 def random_crop_nonface(img, face_bboxes, n):
-    """random crop nonface region from img with size n
-    :param img: image
-    :param face_bboxes: face bboxes in this image
-    :param n: number of nonface bboxes to crop
-    :return nonface_bboxes: nonface region with size n
-    """
-    nonface_bboxes = []
-    region = img.shape[:-1]
-    height, width = region
-    range_x = width - 12
-    range_y = height - 12
-    win_size = [12, 24, 48, 64, 96]
-    while len(nonface_bboxes) < n:
-      x, y = np.random.randint(range_x), np.random.randint(range_y)
-      w = h = np.random.randint(low=12, high=min(width - x, height - y))
-      # w = h = np.random.choice(win_size)
-      nonface_bbox = [x, y, w, h]
-      if not check_bbox(nonface_bbox, region):
-        continue
-      use_it = True
-      for face_bbox in face_bboxes:
-        if calc_IoU(nonface_bbox, face_bbox) > NONFACE_OVERLAP_THRESHOLD:
-          use_it = False
-          break
-      if use_it:
-        nonface_bboxes.append(nonface_bbox)
-    return nonface_bboxes
+  """random crop nonface region from img with size n
+  :param img: image
+  :param face_bboxes: face bboxes in this image
+  :param n: number of nonface bboxes to crop
+  :return nonface_bboxes: nonface region with size n
+  """
+  nonface_bboxes = []
+  region = img.shape[:-1]
+  height, width = region
+  range_x = width - 12
+  range_y = height - 12
+  win_size = [12, 24, 48, 64, 96]
+  while len(nonface_bboxes) < n:
+    x, y = np.random.randint(range_x), np.random.randint(range_y)
+    w = h = np.random.randint(low=12, high=min(width - x, height - y))
+    # w = h = np.random.choice(win_size)
+    nonface_bbox = [x, y, w, h]
+    if not check_bbox(nonface_bbox, region):
+      continue
+    use_it = True
+    for face_bbox in face_bboxes:
+      if calc_IoU(nonface_bbox, face_bbox) > NONFACE_OVERLAP_THRESHOLD:
+        use_it = False
+        break
+    if use_it:
+      nonface_bboxes.append(nonface_bbox)
+  return nonface_bboxes
 
 
 def nonface_reader_func(q_in, q_out):
@@ -306,7 +312,7 @@ def nonface_reader_func(q_in, q_out):
 
 def nonface_writer_func(q_out, db_name):
   if net_type == 'p':
-    map_size = G12
+    map_size = G4
   elif net_type == 'r':
     map_size = G12
   else:

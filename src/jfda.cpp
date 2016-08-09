@@ -1,4 +1,6 @@
 #include "jfda.hpp"
+#include <ctime>
+#include <cstdarg>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <caffe/caffe.hpp>
@@ -9,6 +11,23 @@ using namespace std;
 namespace jfda {
 
 vector<FaceBBox> nms(vector<FaceBBox>& bboxes, float overlap = 0.3);
+
+void SetGpu() {
+  caffe::Caffe::set_mode(caffe::Caffe::GPU);
+}
+
+void JLOG(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  char msg[256];
+  vsprintf(msg, fmt, args);
+  va_end(args);
+
+  char buff[256];
+  time_t t = time(NULL);
+  strftime(buff, sizeof(buff), "[%x - %X]", localtime(&t));
+  printf("%s %s\n", buff, msg);
+}
 
 Detector::Detector() {
   pnet = new caffe::Net<float>("../proto/p.prototxt", caffe::TEST);
@@ -26,7 +45,7 @@ Detector::~Detector() {
 }
 
 static const float kPNetScoreTh = 0.5;
-static const float kRNetScoreTh = 0.8;
+static const float kRNetScoreTh = 0.7;
 static const float kONetScoreTh = 0.9;
 
 vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
@@ -37,7 +56,7 @@ vector<FaceBBox> Detector::detect(const Mat& img_, int level) {
   int width = img.cols / 2;
   cv::resize(img, img, cv::Size(width, height));
   float scale = 2.;
-  float factor = 1.4;
+  float factor = 1.2;
   vector<FaceBBox> p_res;
   boost::shared_ptr<caffe::Blob<float> > input = pnet->blob_by_name("data");
   boost::shared_ptr<caffe::Blob<float> > face_prob = pnet->blob_by_name("face_prob");
