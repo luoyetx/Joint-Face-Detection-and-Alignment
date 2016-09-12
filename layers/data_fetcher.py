@@ -35,7 +35,7 @@ import multiprocessing
 import cv2
 import lmdb
 import numpy as np
-from .utils import get_face_size, load_wider, calc_IoU
+from data.utils import get_face_size, load_wider, calc_IoU
 
 
 NONFACE_OVERLAP_THRESHOLD = 0.3

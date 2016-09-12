@@ -4,7 +4,7 @@ import json
 from multiprocessing import Queue
 import caffe
 from data.utils import get_face_size
-from data.fetcher import BatchGenerator
+from .data_fetcher import BatchGenerator
 
 
 class JfdaDataLayer(caffe.Layer):
