@@ -1,0 +1,22 @@
+net: "proto/r_train_val.prototxt"
+
+test_initialization: false
+test_iter: 600
+test_interval: 2500
+
+base_lr: 0.001
+momentum: 0.9
+weight_decay: 0.0005
+
+lr_policy: "step"
+gamma: 0.5
+stepsize: 25000
+
+display: 500
+average_loss: 500
+
+max_iter: 100000
+snapshot: 5000
+snapshot_prefix: "tmp/rnet"
+
+solver_mode: GPU

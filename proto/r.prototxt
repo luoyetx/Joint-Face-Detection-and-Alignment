@@ -1,0 +1,143 @@
+name: "rNet"
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param {
+    shape: {
+      dim: 1
+      dim: 3
+      dim: 24
+      dim: 24
+    }
+  }
+}
+
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  convolution_param {
+    num_output: 28
+    kernel_size: 3
+    stride: 1
+  }
+}
+layer {
+  name: "prelu1"
+  type: "PReLU"
+  bottom: "conv1"
+  top: "conv1"
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  convolution_param {
+    num_output: 48
+    kernel_size: 3
+    stride: 1
+  }
+}
+layer {
+  name: "prelu2"
+  type: "PReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 3
+    stride: 2
+  }
+}
+
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "conv3"
+  convolution_param {
+    num_output: 64
+    kernel_size: 2
+    stride: 1
+  }
+}
+layer {
+  name: "prelu3"
+  type: "PReLU"
+  bottom: "conv3"
+  top: "conv3"
+}
+
+layer {
+  name: "fc"
+  type: "InnerProduct"
+  bottom: "conv3"
+  top: "fc"
+  inner_product_param {
+    num_output: 128
+  }
+}
+layer {
+  name: "prelu4"
+  type: "PReLU"
+  bottom: "fc"
+  top: "fc"
+}
+
+# score
+layer {
+  name: "score"
+  type: "InnerProduct"
+  bottom: "fc"
+  top: "score"
+  inner_product_param {
+    num_output: 2
+  }
+}
+layer {
+  name: "prob"
+  type: "Softmax"
+  bottom: "score"
+  top: "prob"
+}
+# bbox
+layer {
+  name: "bbox_pred"
+  type: "InnerProduct"
+  bottom: "fc"
+  top: "bbox_pred"
+  inner_product_param {
+    num_output: 4
+  }
+}
+# landmark
+layer {
+  name: "landmark_pred"
+  type: "InnerProduct"
+  bottom: "fc"
+  top: "landmark_pred"
+  inner_product_param {
+    num_output: 10
+  }
+}

@@ -1,0 +1,78 @@
+#!/usr/bin/env python2.7
+
+import argparse
+import cv2
+import caffe
+from jfda.config import cfg
+from jfda.utils import get_logger, Timer
+from jfda.detector import JfdaDetector
+
+
+def main(args):
+  net = ['proto/p.prototxt', 'model/p.caffemodel',
+         'proto/r.prototxt', 'model/r.caffemodel',
+         'proto/o.prototxt', 'model/o.caffemodel',]
+  detector = JfdaDetector(net)
+  logger = get_logger()
+  counter = 0
+  timer = Timer()
+  for i in range(10):
+    logger.info('Process FOLD-%02d', i)
+    txt_in = cfg.FDDB_DIR + '/FDDB-folds/FDDB-fold-%02d.txt'%(i + 1)
+    txt_out = cfg.FDDB_DIR + '/result/fold-%02d-out.txt'%(i + 1)
+    answer_in = cfg.FDDB_DIR + '/FDDB-folds/FDDB-fold-%02d-ellipseList.txt'%(i + 1)
+    fin = open(txt_in, 'r')
+    fout = open(txt_out, 'w')
+    ain = open(answer_in, 'r')
+    for line in fin.readlines():
+      line = line.strip()
+      in_file = cfg.FDDB_DIR + '/images/' + line + '.jpg'
+      out_file = cfg.FDDB_DIR + '/result/images/' + line.replace('/', '-') + '.jpg'
+      counter += 1
+      img = cv2.imread(in_file, cv2.IMREAD_COLOR)
+      timer.tic()
+      bboxes = detector.detect(img, **cfg.DETECT_PARAMS)
+      timer.toc()
+      logger.info('Detect %04d th image costs %.04lf', counter, timer.elapsed())
+      fout.write('%s\n'%line)
+      fout.write('%d\n'%len(bboxes))
+      for bbox in bboxes:
+        x1, y1, x2, y2, score = bbox[:5]
+        fout.write('%lf %lf %lf %lf %lf\n'%(x1, y1, x2 - x1, y2 - y1, score))
+      # draw ground truth
+      ain.readline() # remove fname
+      n = int(ain.readline().strip())
+      for i in range(n):
+        line = ain.readline().strip()
+        components = [float(_)  for _ in line.split(' ')[:5]]
+        major_axis_radius, minor_axis_radius, angle, center_x, center_y = components
+        angle = angle / 3.1415926 * 180.
+        center_x, center_y = int(center_x), int(center_y)
+        major_axis_radius, minor_axis_radius = int(major_axis_radius), int(minor_axis_radius)
+        cv2.ellipse(img, (center_x, center_y), (major_axis_radius, minor_axis_radius), angle, 0, 360, (255, 0, 0), 2)
+      # draw and save
+      for bbox in bboxes:
+        x1, y1, x2, y2, score = bbox[:5]
+        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.putText(img, '%.03f'%score, (x1, y1), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0))
+      cv2.imwrite(out_file, img)
+    fin.close()
+    fout.close()
+    ain.close()
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
+  args = parser.parse_args()
+
+  print args
+
+  if args.gpu >= 0:
+    caffe.set_mode_gpu()
+    caffe.set_device(args.gpu)
+  else:
+    caffe.set_mode_cpu()
+
+  main(args)

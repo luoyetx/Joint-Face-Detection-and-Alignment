@@ -1,9 +1,9 @@
 % extarct face bbox from mat file to text file
 
 % wider_face_train.mat
-load('wider_face_train.mat', 'file_list');
-load('wider_face_train.mat', 'face_bbx_list');
-fout = fopen('wider_face_train.txt', 'wb');
+load('WIDER/wider_face_split/wider_face_train.mat', 'file_list');
+load('WIDER/wider_face_split/wider_face_train.mat', 'face_bbx_list');
+fout = fopen('WIDER/wider_face_split/wider_face_train.txt', 'wb');
 n = size(file_list, 1); % number of events
 for i = 1:n
     event = file_list{i};
@@ -21,9 +21,9 @@ end
 fclose(fout);
 
 % wider_face_val.mat
-load('wider_face_val.mat', 'file_list');
-load('wider_face_val.mat', 'face_bbx_list');
-fout = fopen('wider_face_val.txt', 'wb');
+load('WIDER/wider_face_split/wider_face_val.mat', 'file_list');
+load('WIDER/wider_face_split/wider_face_val.mat', 'face_bbx_list');
+fout = fopen('WIDER/wider_face_split/wider_face_val.txt', 'wb');
 n = size(file_list, 1); % number of events
 for i = 1:n
     event = file_list{i};
