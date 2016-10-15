@@ -16,6 +16,14 @@ def main(args):
   logger = get_logger()
   counter = 0
   timer = Timer()
+  param = {
+    'ths': [0.6, 0.7, 0.8],
+    'factor': 0.7,
+    'min_size': 24,
+  }
+  total_time = 0.
+  total_width = 0
+  total_height = 0
   for i in range(10):
     logger.info('Process FOLD-%02d', i)
     txt_in = cfg.FDDB_DIR + '/FDDB-folds/FDDB-fold-%02d.txt'%(i + 1)
@@ -31,9 +39,14 @@ def main(args):
       counter += 1
       img = cv2.imread(in_file, cv2.IMREAD_COLOR)
       timer.tic()
-      bboxes = detector.detect(img, **cfg.DETECT_PARAMS)
+      bboxes = detector.detect(img, **param)
       timer.toc()
-      logger.info('Detect %04d th image costs %.04lf', counter, timer.elapsed())
+      total_time += timer.elapsed()
+      h, w = img.shape[:-1]
+      total_height += h
+      total_width += w
+      logger.info('Detect %04d th image costs %.04lfs, average %.04lfs, %d x %d', counter,
+                  timer.elapsed(), total_time / counter, total_height / counter, total_width / counter)
       fout.write('%s\n'%line)
       fout.write('%d\n'%len(bboxes))
       for bbox in bboxes:
@@ -56,6 +69,10 @@ def main(args):
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
         cv2.putText(img, '%.03f'%score, (x1, y1), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 0))
+        landmark = bbox[9:].reshape((5, 2))
+        for x, y in landmark:
+          x, y = int(x), int(y)
+          cv2.circle(img, (x, y), 2, (0, 255, 0), -1)
       cv2.imwrite(out_file, img)
     fin.close()
     fout.close()

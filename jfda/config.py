@@ -35,7 +35,7 @@ cfg.PROPOSAL_SCALES = [0.8, 1.0, 1.2]
 cfg.PROPOSAL_STRIDES = [0.1]
 cfg.POS_PER_FACE = 10
 cfg.PART_PER_FACE = 10
-cfg.LANDMARK_PER_FACE = 5
+cfg.LANDMARK_PER_FACE = 10
 cfg.NEG_PER_IMAGE = 128
 cfg.NEG_PROPOSAL_RATIO = 10 # total proposal size equals to NEG_PER_IMAGE * NEG_PROPOSAL_RATIO
 cfg.NEG_MIN_SIZE = 12
@@ -49,6 +49,13 @@ cfg.DETECT_PARAMS = {
   'min_size': 24,
   'ths': [0.5, 0.5, 0.5],
   'factor': 0.7
+}
+
+# training data ratio in a minibatch, [negative, positive, part, landmark]
+cfg.DATA_RATIO = {
+  'p': [3, 1, 1, 2],
+  'r': [3, 1, 1, 2],
+  'o': [2, 1, 1, 2],
 }
 
 # data augment

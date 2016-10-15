@@ -26,7 +26,7 @@ class Solver:
                      'data/%snet_part_val'%net_type,
                      'data/%snet_landmark_val'%net_type]
     base_size = args.size
-    ns = [3*base_size, base_size, base_size, 2*base_size]
+    ns = [r*base_size for r in cfg.DATA_RATIO[net_type]]
     # batcher setup
     batcher_train = MiniBatcher(db_names_train, ns, net_type)
     batcher_test = MiniBatcher(db_names_test, ns, net_type)
@@ -38,8 +38,8 @@ class Solver:
     # solver parameter setup
     size_train = batcher_train.get_size()
     size_test = batcher_test.get_size()
-    iter_train = max([x/y for x, y in zip(size_train, ns)])
-    iter_test = max([x/y for x, y in zip(size_test, ns)])
+    iter_train = sum([x/y for x, y in zip(size_train, ns)]) / len(ns)  # train epoch size
+    iter_test = sum([x/y for x, y in zip(size_test, ns)]) / len(ns)  # test epoch size
     max_iter = args.epoch * iter_train
     self.final_model = 'tmp/%snet_iter_%d.caffemodel'%(net_type, max_iter)
     solver_param = caffe_pb2.SolverParameter()

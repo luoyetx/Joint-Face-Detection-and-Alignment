@@ -46,8 +46,8 @@ class MiniBatcher(multiprocessing.Process):
     if np.random.rand() < cfg.FLIP_PROB:
       data = data[:, ::-1, :]
       if bbox is not None:
-        # [dx1 dy1 dx2 dy2] --> [dx2 dy1 dx1 dy2]
-        bbox[0], bbox[2] = bbox[2], bbox[0]
+        # [dx1 dy1 dx2 dy2] --> [-dx2 dy1 -dx1 dy2]
+        bbox[0], bbox[2] = -bbox[2], -bbox[0]
       if landmark is not None:
         landmark1 = landmark.reshape((-1, 2))
         # x --> 1 - x

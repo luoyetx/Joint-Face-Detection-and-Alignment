@@ -43,6 +43,10 @@ I have write a matlab script to extract WIDER FACE info from matlab `mat` file t
 
 Prepare data and train network follow the commands in `train.sh`.
 
+## Test
+
+Test the model with `demo.py` for simple detection and `fddb.py` for FDDB benchmark.
+
 ## References
 
 - [A Convolutional Neural Network Cascade for Face Detection](http://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Li_A_Convolutional_Neural_2015_CVPR_paper.pdf)

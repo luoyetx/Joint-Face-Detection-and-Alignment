@@ -87,6 +87,8 @@ def proposal(img, gt_bboxes, detector=None):
   # ======================= proposal for rnet and onet ==============
   if detector is not None:
     bboxes = detector.detect(img, **cfg.DETECT_PARAMS)
+    # # maybe sort it by score in descending order
+    # bboxes = bboxes[bboxes[:, 4].argsort()[::-1]]
     # keep bbox info, drop score, offset and landmark
     bboxes = bboxes[:, :4]
     ovs = bbox_overlaps(bboxes, gt_bboxes)
@@ -141,6 +143,7 @@ def proposal(img, gt_bboxes, detector=None):
   for gt_bbox in gt_bboxes:
     x, y = gt_bbox[:2]
     w, h = gt_bbox[2]-gt_bbox[0], gt_bbox[3]-gt_bbox[1]
+    this_positives, this_part = [], []
     for scale in cfg.PROPOSAL_SCALES:
       k = max(w, h) * scale
       for stride in cfg.PROPOSAL_STRIDES:
@@ -167,7 +170,7 @@ def proposal(img, gt_bboxes, detector=None):
           # cv2.imshow('positive', data)
           # cv2.waitKey()
           bbox_target = (gt_bbox - bbox) / k
-          positives.append((data, bbox, bbox_target))
+          this_positives.append((data, bbox, bbox_target))
         # part faces
         for bbox in part_bboxes[:cfg.PART_PER_FACE]:
           data = crop_face(img, bbox)
@@ -176,11 +179,11 @@ def proposal(img, gt_bboxes, detector=None):
           # cv2.imshow('part', data)
           # cv2.waitKey()
           bbox_target = (gt_bbox - bbox) / k
-          part.append((data, bbox, bbox_target))
-  random.shuffle(positives)
-  random.shuffle(part)
-  positives = positives[:cfg.POS_PER_FACE*len(gt_bboxes)]
-  part = part[:cfg.PART_PER_FACE*len(gt_bboxes)]
+          this_part.append((data, bbox, bbox_target))
+    random.shuffle(this_positives)
+    random.shuffle(this_part)
+    positives.extend(this_positives[:cfg.POS_PER_FACE])
+    part.extend(this_part[:cfg.PART_PER_FACE])
   # negatives
   negatives = []
   bbox_neg = []

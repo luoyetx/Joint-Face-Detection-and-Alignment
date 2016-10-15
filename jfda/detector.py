@@ -2,7 +2,7 @@ import math
 import cv2
 import caffe
 import numpy as np
-from jfda.utils import crop_face
+from jfda.utils import crop_face, Timer
 
 
 class JfdaDetector:
@@ -19,8 +19,9 @@ class JfdaDetector:
     if len(nets) >= 6:
       self.onet = caffe.Net(nets[4], caffe.TEST, weights=nets[5])
 
-  def detect(self, img, ths, min_size, factor):
+  def detect(self, img, ths, min_size, factor, debug=False):
     '''detect face, return bboxes, [bbox score offset landmark]
+    if debug is on, return bboxes of every stage and time consumption
     '''
     base = 12. / min_size
     height, width = img.shape[:-1]
@@ -31,7 +32,11 @@ class JfdaDetector:
       scales.append(base)
       base *= factor
       l *= factor
+    timer = Timer()
+    ts = [0, 0, 0]
+    bb = [None, None, None]
     # stage-1
+    timer.tic()
     bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
     for scale in scales:
       w, h = int(math.ceil(scale * width)), int(math.ceil(scale * height))
@@ -48,9 +53,16 @@ class JfdaDetector:
     bboxes = bboxes[keep]
     bboxes = self._bbox_reg(bboxes)
     bboxes = self._make_square(bboxes)
+    timer.toc()
+    ts[0] = timer.elapsed()
+    bb[0] = bboxes.copy()
     # stage-2
     if self.rnet is None or len(bboxes) == 0:
-      return bboxes
+      if debug is True:
+        return bb, ts
+      else:
+        return bboxes
+    timer.tic()
     n = len(bboxes)
     data = np.zeros((n, 3, 24, 24), dtype=np.float32)
     for i, bbox in enumerate(bboxes):
@@ -67,9 +79,16 @@ class JfdaDetector:
     bboxes = bboxes[keep]
     bboxes = self._bbox_reg(bboxes)
     bboxes = self._make_square(bboxes)
+    timer.toc()
+    ts[1] = timer.elapsed()
+    bb[1] = bboxes.copy()
     # stage-3
     if self.onet is None or len(bboxes) == 0:
-      return bboxes
+      if debug is True:
+        return bb, ts
+      else:
+        return bboxes
+    timer.tic()
     n = len(bboxes)
     data = np.zeros((n, 3, 48, 48), dtype=np.float32)
     for i, bbox in enumerate(bboxes):
@@ -86,7 +105,13 @@ class JfdaDetector:
     bboxes = bboxes[keep]
     bboxes = self._locate_landmark(bboxes)
     bboxes = self._bbox_reg(bboxes)
-    return bboxes
+    timer.toc()
+    ts[2] = timer.elapsed()
+    bb[2] = bboxes.copy()
+    if debug is True:
+      return bb, ts
+    else:
+      return bboxes
 
   def _forward(self, net, data, outs):
     '''forward a net with given data, return blobs[out]
