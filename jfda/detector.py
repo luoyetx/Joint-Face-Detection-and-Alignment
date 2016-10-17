@@ -56,6 +56,7 @@ class JfdaDetector:
     timer.toc()
     ts[0] = timer.elapsed()
     bb[0] = bboxes.copy()
+    self._clear_network_buffer(self.pnet)
     # stage-2
     if self.rnet is None or len(bboxes) == 0:
       if debug is True:
@@ -82,6 +83,7 @@ class JfdaDetector:
     timer.toc()
     ts[1] = timer.elapsed()
     bb[1] = bboxes.copy()
+    self._clear_network_buffer(self.rnet)
     # stage-3
     if self.onet is None or len(bboxes) == 0:
       if debug is True:
@@ -101,13 +103,14 @@ class JfdaDetector:
     bboxes[:, 4] = prob[keep, 1]
     bboxes[:, 5:9] = bbox_pred[keep]
     bboxes[:, 9:] = landmark_pred[keep]
-    keep = nms(bboxes, 0.7, 'Min')
-    bboxes = bboxes[keep]
     bboxes = self._locate_landmark(bboxes)
     bboxes = self._bbox_reg(bboxes)
+    keep = nms(bboxes, 0.7, 'Min')
+    bboxes = bboxes[keep]
     timer.toc()
     ts[2] = timer.elapsed()
     bb[2] = bboxes.copy()
+    self._clear_network_buffer(self.onet)
     if debug is True:
       return bb, ts
     else:
@@ -120,6 +123,17 @@ class JfdaDetector:
     net.blobs['data'].data[...] = data
     net.forward()
     return [net.blobs[out].data for out in outs]
+
+  def _clear_network_buffer(self, net):
+    if net is self.pnet:
+      fake = np.zeros((1, 3, 12, 12), dtype=np.float32)
+    elif net is self.rnet:
+      fake = np.zeros((1, 3, 24, 24), dtype=np.float32)
+    else:
+      fake = np.zeros((1, 3, 48, 48), dtype=np.float32)
+    net.blobs['data'].reshape(*fake.shape)
+    net.blobs['data'].data[...] = fake
+    net.forward()
 
   def _gen_bbox(self, hotmap, offset, landmark, scale, th):
     '''[x1, y1, x2, y2, score, offset_x1, offset_y1, offset_x2, offset_y2]

@@ -40,8 +40,9 @@ def main(args):
       timer.tic()
       bb, ts = detector.detect(img, debug=True, **param)
       timer.toc()
-      print 'detect %s costs %.04lfs, s1: %.04lfs, s2: %.04lfs, s3: %.04lfs'%(fp,
-            timer.elapsed(), ts[0], ts[1], ts[2])
+      print 'detect %s costs %.04lfs'%(fp, timer.elapsed())
+      print 'image size = (%d x %d), s1: %.04lfs, s2: %.04lfs, s3: %.04lfs'%(
+            img.shape[0], img.shape[1], ts[0], ts[1], ts[2])
       out1 = 'tmp/%s_stage1.jpg'%fn
       out2 = 'tmp/%s_stage2.jpg'%fn
       out3 = 'tmp/%s_stage3.jpg'%fn

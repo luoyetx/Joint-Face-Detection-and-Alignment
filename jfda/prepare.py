@@ -448,6 +448,7 @@ def celeba_writer_func(q_out, db_name):
       if counter%1000 == 0:
         logger.info('writes %d landmark faces', counter)
   db.close()
+  logger.info('Finish')
 
 
 def test():
