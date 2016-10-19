@@ -10,14 +10,16 @@ class JfdaDetector:
   '''
 
   def __init__(self, nets):
-    assert len(nets) in [2, 4, 6], 'wrong number of nets'
-    self.pnet, self.rnet, self.onet = None, None, None
+    assert len(nets) in [2, 4, 6, 8], 'wrong number of nets'
+    self.pnet, self.rnet, self.onet, self.lnet = None, None, None, None
     if len(nets) >= 2:
       self.pnet = caffe.Net(nets[0], caffe.TEST, weights=nets[1])
     if len(nets) >= 4:
       self.rnet = caffe.Net(nets[2], caffe.TEST, weights=nets[3])
     if len(nets) >= 6:
       self.onet = caffe.Net(nets[4], caffe.TEST, weights=nets[5])
+    if len(nets) >= 8:
+      self.lnet = caffe.Net(nets[6], caffe.TEST, weights=nets[7])
 
   def detect(self, img, ths, min_size, factor, debug=False):
     '''detect face, return bboxes, [bbox score offset landmark]
@@ -33,8 +35,8 @@ class JfdaDetector:
       base *= factor
       l *= factor
     timer = Timer()
-    ts = [0, 0, 0]
-    bb = [None, None, None]
+    ts = [0, 0, 0, 0]
+    bb = [None, None, None, None]
     # stage-1
     timer.tic()
     bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
@@ -111,6 +113,36 @@ class JfdaDetector:
     ts[2] = timer.elapsed()
     bb[2] = bboxes.copy()
     self._clear_network_buffer(self.onet)
+    # stage-4
+    if self.lnet is None or len(bboxes) == 0:
+      if debug is True:
+        return bb, ts
+      else:
+        return bboxes
+    timer.tic()
+    n = len(bboxes)
+    data = np.zeros((n, 15, 24, 24), dtype=np.float32)
+    w, h = bboxes[:, 2]-bboxes[:, 0], bboxes[:, 3]-bboxes[:, 1]
+    l = np.maximum(w, h) * 0.25
+    for i in range(len(bboxes)):
+      x1, y1, x2, y2 = bboxes[i, :4]
+      landmark = bboxes[i, 9:].reshape((5, 2))
+      for j in range(5):
+        x, y = landmark[j]
+        patch_bbox = [x-l[i]/2, y-l[i]/2, x+l[i]/2, y+l[i]/2]
+        patch = crop_face(img, patch_bbox)
+        patch = cv2.resize(patch, (24, 24))
+        patch = patch.transpose((2, 0, 1))
+        data[i, (3*j):(3*j+3)] = patch
+    data = (data - 128) / 128
+    offset = self._forward(self.lnet, data, ['fc6_1', 'fc6_2', 'fc6_3', 'fc6_4', 'fc6_5'])
+    offset = np.hstack(offset)
+    offset *= l.reshape((-1, 1))
+    bboxes[:, 9:] += offset
+    timer.toc()
+    ts[3] = timer.elapsed()
+    bb[3] = bboxes.copy()
+    self._clear_network_buffer(self.lnet)
     if debug is True:
       return bb, ts
     else:
@@ -129,8 +161,10 @@ class JfdaDetector:
       fake = np.zeros((1, 3, 12, 12), dtype=np.float32)
     elif net is self.rnet:
       fake = np.zeros((1, 3, 24, 24), dtype=np.float32)
-    else:
+    elif net is self.onet:
       fake = np.zeros((1, 3, 48, 48), dtype=np.float32)
+    else:
+      fake = np.zeros((1, 15, 24, 24), dtype=np.float32)
     net.blobs['data'].reshape(*fake.shape)
     net.blobs['data'].data[...] = fake
     net.forward()

@@ -98,7 +98,7 @@ if __name__ == '__main__':
   parser.add_argument('--size', type=int, default=128, help='base batch size')
   parser.add_argument('--epoch', type=int, default=20, help='train epoches')
   parser.add_argument('--snapshot', type=str, default=None, help='snapshot model')
-  parser.add_argument('--lr', type=float, default=0.1, help='initial learning rate')
+  parser.add_argument('--lr', type=float, default=0.01, help='initial learning rate')
   parser.add_argument('--lrw', type=float, default=0.1, help='lr decay rate')
   parser.add_argument('--lrp', type=int, default=2, help='number of epoches to decay the lr')
   args = parser.parse_args()

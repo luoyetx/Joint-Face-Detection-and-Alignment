@@ -51,7 +51,7 @@ Test the model with `demo.py` for simple detection and `fddb.py` for FDDB benchm
 
 Since `pNet` may output many bboxes for `rNet` and Caffe's `Blob` never realloc the memory if your new data is smaller, this makes `Blob` only grow the memory and never reduce, which looks like a memory leak. It is fine for most cases but not for our case. You may modify `src/caffe/blob.cpp` if you encounter the memory issue.
 
-```
+```c++
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const vector<int>& shape) {
   /* some code */
@@ -63,7 +63,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 }
 ```
 
-```
+```c++
 template <typename Dtype>
 void Blob<Dtype>::Reshape(const vector<int>& shape) {
   /* some code */

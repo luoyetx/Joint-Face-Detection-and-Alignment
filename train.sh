@@ -19,3 +19,9 @@ python jfda/prepare.py --net o --celeba --worker 8
 python jfda/prepare.py --net o --gpu 0 --detect --wider --worker 2
 echo "Train oNet"
 python jfda/train.py --net o --gpu 0 --size 64 --lr 0.01 --lrw 0.1 --lrp 10 --epoch 40
+
+# lnet
+echo "Generate Data for lNet"
+python jfda/lnet.py --prepare --worker 8
+echo "Train lNet"
+python jfda/lnet.py --train --gpu 0 --lr 0.1 --lrw 0.1 --lrp 2 --epoch 10

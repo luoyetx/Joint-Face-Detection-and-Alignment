@@ -61,3 +61,9 @@ cfg.DATA_RATIO = {
 # data augment
 cfg.GRAY_PROB = 0.1
 cfg.FLIP_PROB = 0.5
+
+# lnet
+cfg.SAMPLE_RADIUS = 0.1
+cfg.DATASIZE_PER_H5 = 100000
+cfg.LNET_SAMPLE_PER_FACE = 3
+cfg.LNET_FACE_SCALES = [0.3]
