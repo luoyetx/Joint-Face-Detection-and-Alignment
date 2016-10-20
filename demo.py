@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
 import os
+import argparse
 import cv2
 from jfda.utils import Timer
 from jfda.detector import JfdaDetector
@@ -36,6 +37,7 @@ def main(args):
   with open('demo.txt', 'r') as fin:
     for line in fin.readlines():
       fp = line.strip()
+      dn = os.path.dirname(fp)
       fn = os.path.basename(fp).split('.')[0]
       img = cv2.imread(fp, cv2.IMREAD_COLOR)
       timer.tic()
@@ -45,10 +47,10 @@ def main(args):
       print 'image size = (%d x %d), s1: %.04lfs, s2: %.04lfs, s3: %.04lfs, s4: %.04lf'%(
             img.shape[0], img.shape[1], ts[0], ts[1], ts[2], ts[3])
       print 'bboxes, s1: %d, s2: %d, s3: %d, s4: %d'%(len(bb[0]), len(bb[1]), len(bb[2]), len(bb[3]))
-      out1 = 'tmp/%s_stage1.jpg'%fn
-      out2 = 'tmp/%s_stage2.jpg'%fn
-      out3 = 'tmp/%s_stage3.jpg'%fn
-      out4 = 'tmp/%s_stage4.jpg'%fn
+      out1 = '%s/%s_stage1.jpg'%(dn, fn)
+      out2 = '%s/%s_stage2.jpg'%(dn, fn)
+      out3 = '%s/%s_stage3.jpg'%(dn, fn)
+      out4 = '%s/%s_stage4.jpg'%(dn, fn)
       gen(img.copy(), bb[0], out1)
       gen(img.copy(), bb[1], out2)
       gen(img.copy(), bb[2], out3)
@@ -56,5 +58,13 @@ def main(args):
 
 
 if __name__ == '__main__':
-  args = None
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
+  args = parser.parse_args()
+
+  if args.gpu >= 0:
+    import caffe
+    caffe.set_mode_gpu()
+    caffe.set_device(args.gpu)
+
   main(args)

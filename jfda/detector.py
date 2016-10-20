@@ -36,7 +36,7 @@ class JfdaDetector:
       l *= factor
     timer = Timer()
     ts = [0, 0, 0, 0]
-    bb = [None, None, None, None]
+    bb = [[], [], [], []]
     # stage-1
     timer.tic()
     bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
@@ -135,8 +135,7 @@ class JfdaDetector:
         patch = patch.transpose((2, 0, 1))
         data[i, (3*j):(3*j+3)] = patch
     data = (data - 128) / 128
-    offset = self._forward(self.lnet, data, ['fc6_1', 'fc6_2', 'fc6_3', 'fc6_4', 'fc6_5'])
-    offset = np.hstack(offset)
+    offset = self._forward(self.lnet, data, ['landmark_offset'])[0]
     offset *= l.reshape((-1, 1))
     bboxes[:, 9:] += offset
     timer.toc()

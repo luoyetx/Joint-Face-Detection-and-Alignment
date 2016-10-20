@@ -580,3 +580,18 @@ layer {
     num_output: 2
   }
 }
+
+######## final output ########
+layer {
+  name: "landmark_offset"
+  type: "Concat"
+  bottom: "fc6_1"
+  bottom: "fc6_2"
+  bottom: "fc6_3"
+  bottom: "fc6_4"
+  bottom: "fc6_5"
+  top: "landmark_offset"
+  concat_param {
+    axis: 1
+  }
+}
