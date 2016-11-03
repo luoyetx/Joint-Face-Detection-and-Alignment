@@ -315,4 +315,7 @@ layer {
   loss_weight: 1.0
   loss_weight: 0
   loss_weight: 0
+  jfda_loss_param {
+    drop_loss_rate: 0.3
+  }
 }

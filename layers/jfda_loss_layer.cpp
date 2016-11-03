@@ -41,6 +41,9 @@ namespace caffe {
 template<typename Dtype>
 void JfdaLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  drop_loss_rate_ = this->layer_param_.jfda_loss_param().drop_loss_rate();
+  if (drop_loss_rate_ < 0.f) drop_loss_rate_ = 0.f;
+  if (drop_loss_rate_ > 1.f) drop_loss_rate_ = 1.f;
 }
 
 template<typename Dtype>
@@ -191,7 +194,7 @@ void JfdaLossLayer<Dtype>::Forward_cpu(
     idx[i] = i;
   }
   _QSort_(loss_data, idx, 0, loss_data.size() - 1);
-  const Dtype th = 0.7;
+  const Dtype th = static_cast<Dtype>(1.f - drop_loss_rate_);
   const int remained = static_cast<int>(loss_data.size() * th);
   Dtype* mask_data = mask_.mutable_cpu_data();
   for (int i = 0; i < remained; i++) {

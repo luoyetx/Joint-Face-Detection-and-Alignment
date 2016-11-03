@@ -60,6 +60,7 @@ class JfdaLossLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
  public:
+  float drop_loss_rate_;
   Blob<Dtype> mask_;
   Blob<Dtype> prob_;
   Blob<Dtype> bbox_diff_;

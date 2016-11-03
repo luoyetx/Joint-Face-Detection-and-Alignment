@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+package caffe;
+
+message LayerParameter {
+  // 23333 may need to be changed due to caffe's proto
+  optional JfdaLossParameter jfda_loss_param = 23333;
+}
+
+message JfdaLossParameter {
+  optional float drop_loss_rate = 1 [default = 0]; // online hard mining drop rate
+}
