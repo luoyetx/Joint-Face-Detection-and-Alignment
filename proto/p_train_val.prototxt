@@ -138,7 +138,7 @@ layer {
   top: "conv3"
 }
 
-#################### score
+# score
 layer {
   name: "score"
   type: "Convolution"

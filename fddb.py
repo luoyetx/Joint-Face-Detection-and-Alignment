@@ -9,9 +9,15 @@ from jfda.detector import JfdaDetector
 
 
 def main(args):
-  net = ['proto/p.prototxt', 'model/p.caffemodel',
-         'proto/r.prototxt', 'model/r.caffemodel',
-         'proto/o.prototxt', 'model/o.caffemodel',]
+  if args.net == 'p':
+    net = ['proto/p.prototxt', 'model/p.caffemodel']
+  elif args.net == 'r':
+    net = ['proto/p.prototxt', 'model/p.caffemodel',
+           'proto/r.prototxt', 'model/r.caffemodel']
+  else:
+    net = ['proto/p.prototxt', 'model/p.caffemodel',
+           'proto/r.prototxt', 'model/r.caffemodel',
+           'proto/o.prototxt', 'model/o.caffemodel',]
   detector = JfdaDetector(net)
   logger = get_logger()
   counter = 0
@@ -82,7 +88,9 @@ def main(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
+  parser.add_argument('--net', type=str, default='o', help='net type to do fddb benchmark')
   args = parser.parse_args()
+  assert args.net in ['p', 'r', 'o']
 
   print args
 

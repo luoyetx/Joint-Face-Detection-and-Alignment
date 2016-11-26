@@ -31,15 +31,18 @@ cfg.NONFACE_OVERLAP = 0.3 # [0, 0.3] is negatives
 cfg.PARTFACE_OVERLAP = 0.4 # (0.4, 0.65] is part faces
 
 # face proposal
-cfg.PROPOSAL_SCALES = [0.8, 1.0, 1.2]
-cfg.PROPOSAL_STRIDES = [0.1]
-cfg.POS_PER_FACE = 10
-cfg.PART_PER_FACE = 10
-cfg.LANDMARK_PER_FACE = 10
-cfg.NEG_PER_IMAGE = 128
+cfg.PROPOSAL_SCALES = [0.8, 1.0, 1.2] # proposal sliding window scales
+cfg.PROPOSAL_STRIDES = [0.1] # proposal sliding window strides
+cfg.POS_PER_FACE = 10 # positive face per face region
+cfg.PART_PER_FACE = 10 # part face per face region
+cfg.NEG_PER_FACE = 10 # non-face per face region
+cfg.LANDMARK_PER_FACE = 10 # landmark face per face region
+cfg.NEG_FROM_FR_RATIO = 0.5 # ratio of non-face from face region, non-face are from face region or global image random patch
+cfg.NEG_PER_IMAGE = 128 # non-face per image
 cfg.NEG_PROPOSAL_RATIO = 10 # total proposal size equals to NEG_PER_IMAGE * NEG_PROPOSAL_RATIO
-cfg.NEG_MIN_SIZE = 12
+cfg.NEG_MIN_SIZE = 12 # minimum random crop patch size for non-face
 
+# using previous network to generate data
 cfg.PROPOSAL_NETS = {
   'p': None,
   'r': ['proto/p.prototxt', 'model/p.caffemodel'],

@@ -143,7 +143,7 @@ def proposal(img, gt_bboxes, detector=None):
   for gt_bbox in gt_bboxes:
     x, y = gt_bbox[:2]
     w, h = gt_bbox[2]-gt_bbox[0], gt_bbox[3]-gt_bbox[1]
-    this_positives, this_part = [], []
+    this_positives, this_part, this_negatives = [], [], []
     for scale in cfg.PROPOSAL_SCALES:
       k = max(w, h) * scale
       for stride in cfg.PROPOSAL_STRIDES:
@@ -180,12 +180,31 @@ def proposal(img, gt_bboxes, detector=None):
           # cv2.waitKey()
           bbox_target = (gt_bbox - bbox) / k
           this_part.append((data, bbox, bbox_target))
+        # checkout negatives
+        ovs = bbox_overlaps(candidates, gt_bboxes)
+        neg_bboxes = candidates[ovs.max(axis=1) < cfg.NONFACE_OVERLAP, :]
+        if len(neg_bboxes) > 0:
+          np.random.shuffle(neg_bboxes)
+        for bbox in neg_bboxes[:cfg.NEG_PER_FACE]:
+          data = crop_face(img, bbox)
+          if data is None:
+            continue
+          # cv2.imshow('negative', data)
+          # cv2.waitKey()
+          this_negatives.append((data, bbox))
+
     random.shuffle(this_positives)
     random.shuffle(this_part)
+    random.shuffle(this_negatives)
     positives.extend(this_positives[:cfg.POS_PER_FACE])
     part.extend(this_part[:cfg.PART_PER_FACE])
+    negatives.extend(this_negatives[:cfg.NEG_PER_FACE])
+
   # negatives
-  negatives = []
+  max_num_from_fr = int(cfg.NEG_PER_IMAGE * cfg.NEG_FROM_FR_RATIO)
+  if len(negatives) > max_num_from_fr:
+    random.shuffle(negatives)
+    negatives = negatives[:max_num_from_fr]
   bbox_neg = []
   range_x, range_y = width - cfg.NEG_MIN_SIZE, height - cfg.NEG_MIN_SIZE
   for i in xrange(cfg.NEG_PROPOSAL_RATIO * cfg.NEG_PER_IMAGE):
@@ -199,7 +218,8 @@ def proposal(img, gt_bboxes, detector=None):
   ovs = bbox_overlaps(bbox_neg, gt_bboxes)
   bbox_neg = bbox_neg[ovs.max(axis=1) < cfg.NONFACE_OVERLAP]
   np.random.shuffle(bbox_neg)
-  bbox_neg = bbox_neg[:cfg.NEG_PER_IMAGE]
+  remain = cfg.NEG_PER_IMAGE - len(negatives)
+  bbox_neg = bbox_neg[:remain]
 
   # for bbox in bbox_neg:
   #   x1, y1, x2, y2 = bbox
@@ -208,7 +228,6 @@ def proposal(img, gt_bboxes, detector=None):
   # cv2.imshow('neg', img)
   # cv2.waitKey()
 
-  random.shuffle(bbox_neg)
   for bbox in bbox_neg:
     data = crop_face(img, bbox)
     negatives.append((data, bbox))
