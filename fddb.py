@@ -24,7 +24,7 @@ def main(args):
   timer = Timer()
   param = {
     'ths': [0.6, 0.7, 0.8],
-    'factor': 0.7,
+    'factor': 0.709,
     'min_size': 24,
   }
   total_time = 0.

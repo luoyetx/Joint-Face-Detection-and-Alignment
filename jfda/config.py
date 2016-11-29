@@ -31,8 +31,14 @@ cfg.NONFACE_OVERLAP = 0.3 # [0, 0.3] is negatives
 cfg.PARTFACE_OVERLAP = 0.4 # (0.4, 0.65] is part faces
 
 # face proposal
-cfg.PROPOSAL_SCALES = [0.8, 1.0, 1.2] # proposal sliding window scales
-cfg.PROPOSAL_STRIDES = [0.1] # proposal sliding window strides
+# cfg.PROPOSAL_SCALES = [0.8, 1.0, 1.2] # proposal sliding window scales
+# cfg.PROPOSAL_STRIDES = [0.1] # proposal sliding window strides
+cfg.POS_PROPOSAL_SCALES = [0.6, 0.8, 1.0, 1.2]
+cfg.POS_PROPOSAL_STRIDE = 0.1
+cfg.PART_PROPOSAL_SCALES = [0.6, 0.8, 1.0, 1.2]
+cfg.PART_PROPOSAL_STRIDE = 0.1
+cfg.NEG_PROPOSAL_SCALES = [0.6, 0.8, 1.0, 1.2]
+cfg.NEG_PROPOSAL_STRIDE = 0.1
 cfg.POS_PER_FACE = 10 # positive face per face region
 cfg.PART_PER_FACE = 10 # part face per face region
 cfg.NEG_PER_FACE = 10 # non-face per face region
@@ -51,7 +57,7 @@ cfg.PROPOSAL_NETS = {
 cfg.DETECT_PARAMS = {
   'min_size': 24,
   'ths': [0.5, 0.5, 0.5],
-  'factor': 0.7
+  'factor': 0.709
 }
 
 # training data ratio in a minibatch, [negative, positive, part, landmark]

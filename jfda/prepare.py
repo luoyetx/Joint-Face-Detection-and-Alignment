@@ -139,68 +139,90 @@ def proposal(img, gt_bboxes, detector=None):
   # ======================= proposal for pnet =======================
   height, width = img.shape[:-1]
   negatives, positives, part = [], [], []
-  # proposal positives and part faces
+
+  # ===== proposal positives =====
   for gt_bbox in gt_bboxes:
     x, y = gt_bbox[:2]
     w, h = gt_bbox[2]-gt_bbox[0], gt_bbox[3]-gt_bbox[1]
-    this_positives, this_part, this_negatives = [], [], []
-    for scale in cfg.PROPOSAL_SCALES:
+    this_positives = []
+    for scale in cfg.POS_PROPOSAL_SCALES:
       k = max(w, h) * scale
-      for stride in cfg.PROPOSAL_STRIDES:
-        s = k * stride
-        offset_x = (0.5 + np.random.rand()) * k / 2.
-        offset_y = (0.5 + np.random.rand()) * k / 2.
-        candidates = sliding_windows(x-offset_x, y-offset_y, w+2*offset_x, h+2*offset_y, k, k, s, s)
-        ovs = bbox_overlaps(candidates, gt_bbox.reshape((1, 4)))
-        ovs = ovs.reshape((1, len(candidates)))[0]
-        pos_bboxes = candidates[ovs > cfg.FACE_OVERLAP, :]
-        part_bboxes = candidates[np.logical_and(ovs > cfg.PARTFACE_OVERLAP, ovs <= cfg.FACE_OVERLAP), :]
-        # print 'all', len(candidates)
-        # print 'pos', len(pos_bboxes)
-        # print 'part', len(part_bboxes)
-        if len(pos_bboxes) > 0:
-          np.random.shuffle(pos_bboxes)
-        if len(part_bboxes) > 0:
-          np.random.shuffle(part_bboxes)
-        # positives
-        for bbox in pos_bboxes[:cfg.POS_PER_FACE]:
-          data = crop_face(img, bbox)
-          if data is None:
-            continue
-          # cv2.imshow('positive', data)
-          # cv2.waitKey()
-          bbox_target = (gt_bbox - bbox) / k
-          this_positives.append((data, bbox, bbox_target))
-        # part faces
-        for bbox in part_bboxes[:cfg.PART_PER_FACE]:
-          data = crop_face(img, bbox)
-          if data is None:
-            continue
-          # cv2.imshow('part', data)
-          # cv2.waitKey()
-          bbox_target = (gt_bbox - bbox) / k
-          this_part.append((data, bbox, bbox_target))
-        # checkout negatives
-        ovs = bbox_overlaps(candidates, gt_bboxes)
-        neg_bboxes = candidates[ovs.max(axis=1) < cfg.NONFACE_OVERLAP, :]
-        if len(neg_bboxes) > 0:
-          np.random.shuffle(neg_bboxes)
-        for bbox in neg_bboxes[:cfg.NEG_PER_FACE]:
-          data = crop_face(img, bbox)
-          if data is None:
-            continue
-          # cv2.imshow('negative', data)
-          # cv2.waitKey()
-          this_negatives.append((data, bbox))
-
+      stride = cfg.POS_PROPOSAL_STRIDE
+      s = k * stride
+      offset_x = (0.5 + np.random.rand()) * k / 2.
+      offset_y = (0.5 + np.random.rand()) * k / 2.
+      candidates = sliding_windows(x-offset_x, y-offset_y, w+2*offset_x, h+2*offset_y, k, k, s, s)
+      ovs = bbox_overlaps(candidates, gt_bbox.reshape((1, 4)))
+      ovs = ovs.reshape((1, len(candidates)))[0]
+      pos_bboxes = candidates[ovs > cfg.FACE_OVERLAP, :]
+      if len(pos_bboxes) > 0:
+        np.random.shuffle(pos_bboxes)
+      for bbox in pos_bboxes[:cfg.POS_PER_FACE]:
+        data = crop_face(img, bbox)
+        if data is None:
+          continue
+        # cv2.imshow('positive', data)
+        # cv2.waitKey()
+        bbox_target = (gt_bbox - bbox) / k
+        this_positives.append((data, bbox, bbox_target))
     random.shuffle(this_positives)
-    random.shuffle(this_part)
-    random.shuffle(this_negatives)
     positives.extend(this_positives[:cfg.POS_PER_FACE])
-    part.extend(this_part[:cfg.PART_PER_FACE])
+
+  # ===== proposal part faces =====
+  for gt_bbox in gt_bboxes:
+    x, y = gt_bbox[:2]
+    w, h = gt_bbox[2]-gt_bbox[0], gt_bbox[3]-gt_bbox[1]
+    this_part = []
+    for scale in cfg.PART_PROPOSAL_SCALES:
+      k = max(w, h) * scale
+      stride = cfg.PART_PROPOSAL_STRIDE
+      s = k * stride
+      offset_x = (0.5 + np.random.rand()) * k / 2.
+      offset_y = (0.5 + np.random.rand()) * k / 2.
+      candidates = sliding_windows(x-offset_x, y-offset_y, w+2*offset_x, h+2*offset_y, k, k, s, s)
+      ovs = bbox_overlaps(candidates, gt_bbox.reshape((1, 4)))
+      ovs = ovs.reshape((1, len(candidates)))[0]
+      part_bboxes = candidates[np.logical_and(ovs > cfg.PARTFACE_OVERLAP, ovs <= cfg.FACE_OVERLAP), :]
+      if len(part_bboxes) > 0:
+        np.random.shuffle(part_bboxes)
+      for bbox in part_bboxes[:cfg.PART_PER_FACE]:
+        data = crop_face(img, bbox)
+        if data is None:
+          continue
+        # cv2.imshow('part', data)
+        # cv2.waitKey()
+        bbox_target = (gt_bbox - bbox) / k
+        this_part.append((data, bbox, bbox_target))
+    random.shuffle(this_part)
+    part.extend(this_part[:cfg.POS_PER_FACE])
+
+  # ===== proposal negatives =====
+  for gt_bbox in gt_bboxes:
+    x, y = gt_bbox[:2]
+    w, h = gt_bbox[2]-gt_bbox[0], gt_bbox[3]-gt_bbox[1]
+    this_negatives = []
+    for scale in cfg.NEG_PROPOSAL_SCALES:
+      k = max(w, h) * scale
+      stride = cfg.NEG_PROPOSAL_STRIDE
+      s = k * stride
+      offset_x = (0.5 + np.random.rand()) * k / 2.
+      offset_y = (0.5 + np.random.rand()) * k / 2.
+      candidates = sliding_windows(x-offset_x, y-offset_y, w+2*offset_x, h+2*offset_y, k, k, s, s)
+      ovs = bbox_overlaps(candidates, gt_bboxes)
+      neg_bboxes = candidates[ovs.max(axis=1) < cfg.NONFACE_OVERLAP, :]
+      if len(neg_bboxes) > 0:
+        np.random.shuffle(neg_bboxes)
+      for bbox in neg_bboxes[:cfg.NEG_PER_FACE]:
+        data = crop_face(img, bbox)
+        if data is None:
+          continue
+        # cv2.imshow('negative', data)
+        # cv2.waitKey()
+        this_negatives.append((data, bbox))
+    random.shuffle(this_negatives)
     negatives.extend(this_negatives[:cfg.NEG_PER_FACE])
 
-  # negatives
+  # negatives from global image random crop
   max_num_from_fr = int(cfg.NEG_PER_IMAGE * cfg.NEG_FROM_FR_RATIO)
   if len(negatives) > max_num_from_fr:
     random.shuffle(negatives)
