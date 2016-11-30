@@ -54,6 +54,7 @@ class JfdaDetector:
     keep = nms(bboxes, 0.7)
     bboxes = bboxes[keep]
     bboxes = self._bbox_reg(bboxes)
+    bboxes = self._make_square(bboxes)
     timer.toc()
     ts[0] = timer.elapsed()
     bb[0] = bboxes.copy()
@@ -67,7 +68,6 @@ class JfdaDetector:
     timer.tic()
     n = len(bboxes)
     data = np.zeros((n, 3, 24, 24), dtype=np.float32)
-    bboxes = self._make_square(bboxes)  # make it square
     for i, bbox in enumerate(bboxes):
       face = crop_face(img, bbox[:4])
       data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
@@ -81,6 +81,7 @@ class JfdaDetector:
     keep = nms(bboxes, 0.7)
     bboxes = bboxes[keep]
     bboxes = self._bbox_reg(bboxes)
+    bboxes = self._make_square(bboxes)
     timer.toc()
     ts[1] = timer.elapsed()
     bb[1] = bboxes.copy()
@@ -94,7 +95,6 @@ class JfdaDetector:
     timer.tic()
     n = len(bboxes)
     data = np.zeros((n, 3, 48, 48), dtype=np.float32)
-    bboxes = self._make_square(bboxes)  # make it square
     for i, bbox in enumerate(bboxes):
       face = crop_face(img, bbox[:4])
       data[i] = cv2.resize(face, (48, 48)).transpose((2, 0, 1))
