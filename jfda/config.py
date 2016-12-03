@@ -44,7 +44,9 @@ cfg.PART_PER_FACE = 10 # part face per face region
 cfg.NEG_PER_FACE = 10 # non-face per face region
 cfg.LANDMARK_PER_FACE = 10 # landmark face per face region
 cfg.NEG_FROM_FR_RATIO = 0.5 # ratio of non-face from face region, non-face are from face region or global image random patch
-cfg.NEG_PER_IMAGE = 128 # non-face per image
+cfg.NEG_FORCE_BALANCE = True # whether to balance the ratio of negatives from face region and global crop, this will reduce the total number of negative samples
+cfg.NEG_PER_IMAGE = 256 # non-face per image, set to 128 if you set cfg.NEG_FORCE_BALANCE=False
+cfg.NEG_DETECT_PER_IMAGE = 128 # use for rnet and onet
 cfg.NEG_PROPOSAL_RATIO = 10 # total proposal size equals to NEG_PER_IMAGE * NEG_PROPOSAL_RATIO
 cfg.NEG_MIN_SIZE = 12 # minimum random crop patch size for non-face
 
@@ -64,7 +66,7 @@ cfg.DETECT_PARAMS = {
 cfg.DATA_RATIO = {
   'p': [3, 1, 1, 2],
   'r': [3, 1, 1, 2],
-  'o': [2, 1, 1, 2],
+  'o': [3, 2, 1, 2],
 }
 
 # data augment

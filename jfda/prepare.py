@@ -86,6 +86,7 @@ def proposal(img, gt_bboxes, detector=None):
   '''
   # ======================= proposal for rnet and onet ==============
   if detector is not None:
+    assert isinstance(detector, JfdaDetector)
     bboxes = detector.detect(img, **cfg.DETECT_PARAMS)
     # # maybe sort it by score in descending order
     # bboxes = bboxes[bboxes[:, 4].argsort()[::-1]]
@@ -126,7 +127,7 @@ def proposal(img, gt_bboxes, detector=None):
     # neg
     negatives = []
     np.random.shuffle(neg_idx)
-    for idx in neg_idx[:cfg.NEG_PER_IMAGE]:
+    for idx in neg_idx[:cfg.NEG_DETECT_PER_IMAGE]:
       bbox = bboxes[idx].reshape(4)
       data = crop_face(img, bbox)
       if data is None:
@@ -240,7 +241,12 @@ def proposal(img, gt_bboxes, detector=None):
   ovs = bbox_overlaps(bbox_neg, gt_bboxes)
   bbox_neg = bbox_neg[ovs.max(axis=1) < cfg.NONFACE_OVERLAP]
   np.random.shuffle(bbox_neg)
-  remain = cfg.NEG_PER_IMAGE - len(negatives)
+  if not cfg.NEG_FORCE_BALANCE:
+    remain = cfg.NEG_PER_IMAGE - len(negatives)
+  else:
+    # balance ratio from face region and global crop
+    remain = len(negatives) * (1. - cfg.NEG_FROM_FR_RATIO) / cfg.NEG_FROM_FR_RATIO
+    remain = int(remain)
   bbox_neg = bbox_neg[:remain]
 
   # for bbox in bbox_neg:

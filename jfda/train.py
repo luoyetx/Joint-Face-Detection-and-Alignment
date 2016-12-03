@@ -52,6 +52,7 @@ class Solver:
     solver_param.base_lr = args.lr
     solver_param.gamma = args.lrw
     solver_param.stepsize = args.lrp * iter_train
+    solver_param.weight_decay = args.wd
     tmp_solver_prototxt = 'tmp/%s_solver.prototxt'%net_type
     with open(tmp_solver_prototxt, 'w') as fout:
       fout.write(pb2.text_format.MessageToString(solver_param))
@@ -64,6 +65,10 @@ class Solver:
     layer_test.set_batch_num(ns[0], ns[1], ns[2], ns[3])
     layer_train.set_data_queue(queue_train)
     layer_test.set_data_queue(queue_test)
+    # copy init weight if any
+    if args.weight:
+      self.solver.net.copy_from(args.weight)
+      self.solver.test_nets[0].copy_from(args.weight)
     # start batcher
     batcher_train.start()
     batcher_test.start()
@@ -101,11 +106,14 @@ if __name__ == '__main__':
   parser.add_argument('--lr', type=float, default=0.01, help='initial learning rate')
   parser.add_argument('--lrw', type=float, default=0.1, help='lr decay rate')
   parser.add_argument('--lrp', type=int, default=2, help='number of epoches to decay the lr')
+  parser.add_argument('--wd', type=float, default=5e-4, help='weight decay')
+  parser.add_argument('--weight', type=str, default=None, help='init weight for the model')
   args = parser.parse_args()
 
   print args
 
   net_type = args.net
+  # check args
   assert net_type in ['p', 'r', 'o'], "net should be 'p', 'r', 'o'"
   cfg.NET_TYPE = net_type
   cfg.GPU_ID = args.gpu

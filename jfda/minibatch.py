@@ -76,7 +76,7 @@ class MiniBatcher(multiprocessing.Process):
         if end[i] > self.db_size[i]:
           end[i] -= self.db_size[i]
           start[i] = end[i]
-          end[i] =  start[i] + self.ns[i]
+          end[i] = start[i] + self.ns[i]
 
       idx = 0
       # negatives
