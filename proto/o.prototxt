@@ -78,7 +78,7 @@ layer {
   top: "conv3"
   convolution_param {
     num_output: 64
-    kernel_size: 2
+    kernel_size: 3
     stride: 1
   }
 }

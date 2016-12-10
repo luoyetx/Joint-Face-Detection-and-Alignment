@@ -3,7 +3,7 @@
 set terminal png size 1280, 960 enhanced font 'Verdana,18'
 set size 1,1
 set grid
-set title "FDDB-B (0.1, 0.1, 0.1)"
+set title "FDDB-B Threshold (0.1, 0.1, 0.1)"
 set ylabel "True positive rate"
 set xlabel "False positive"
 set key below

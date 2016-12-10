@@ -51,7 +51,7 @@ def onet():
     prelu2 = mx.sym.LeakyReLU(data=conv2, act_type='prelu', name='prelu2')
     pool2 = mx.sym.Pooling(data=prelu2, kernel=(3, 3), stride=(2, 2), pool_type='max', \
                            pooling_convention='full', name='pool2')
-    conv3 = mx.sym.Convolution(data=pool2, kernel=(2, 2), num_filter=64, name='conv3')
+    conv3 = mx.sym.Convolution(data=pool2, kernel=(3, 3), num_filter=64, name='conv3')
     prelu3 = mx.sym.LeakyReLU(data=conv3, act_type='prelu', name='prelu3')
     pool3 = mx.sym.Pooling(data=prelu3, kernel=(2, 2), stride=(2, 2), pool_type='max', \
                            pooling_convention='full', name='pool3')
