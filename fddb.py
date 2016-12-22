@@ -19,6 +19,8 @@ def main(args):
            'proto/r.prototxt', 'model/r.caffemodel',
            'proto/o.prototxt', 'model/o.caffemodel',]
   detector = JfdaDetector(net)
+  if args.pnet_single:
+    detector.set_pnet_single_forward(True)
   logger = get_logger()
   counter = 0
   timer = Timer()
@@ -89,6 +91,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
   parser.add_argument('--net', type=str, default='o', help='net type to do fddb benchmark')
+  parser.add_argument('--pnet-single', action='store_true', help='pnet use single forward')
   args = parser.parse_args()
   assert args.net in ['p', 'r', 'o']
 

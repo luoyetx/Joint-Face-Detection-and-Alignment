@@ -13,6 +13,8 @@ def main(args):
          'proto/o.prototxt', 'model/o.caffemodel',
          'proto/l.prototxt', 'model/l.caffemodel',]
   detector = JfdaDetector(net)
+  if args.pnet_single:
+    detector.set_pnet_single_forward(True)
   param = {
     'ths': [0.6, 0.7, 0.8],
     'factor': 0.709,
@@ -60,6 +62,7 @@ def main(args):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
+  parser.add_argument('--pnet-single', action='store_true', help='pnet use single forward')
   args = parser.parse_args()
 
   if args.gpu >= 0:

@@ -20,37 +20,58 @@ class JfdaDetector:
       self.onet = caffe.Net(nets[4], caffe.TEST, weights=nets[5])
     if len(nets) >= 8:
       self.lnet = caffe.Net(nets[6], caffe.TEST, weights=nets[7])
+    self.pnet_single_forward = False
+
+  def set_pnet_single_forward(self, single_forward=True):
+    '''convert image pyramid to a single image and forward once
+    '''
+    self.pnet_single_forward = single_forward
 
   def detect(self, img, ths, min_size, factor, debug=False):
     '''detect face, return bboxes, [bbox score offset landmark]
     if debug is on, return bboxes of every stage and time consumption
     '''
-    base = 12. / min_size
-    height, width = img.shape[:-1]
-    l = min(width, height)
-    l *= base
-    scales = []
-    while l > 12:
-      scales.append(base)
-      base *= factor
-      l *= factor
     timer = Timer()
     ts = [0, 0, 0, 0]
     bb = [[], [], [], []]
     # stage-1
     timer.tic()
-    bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
-    for scale in scales:
-      w, h = int(math.ceil(scale * width)), int(math.ceil(scale * height))
-      data = cv2.resize(img, (w, h))
-      data = data.transpose((2, 0, 1)).astype(np.float32)
-      data = (data - 128) / 128
-      data = data.reshape((1, 3, h, w))
+    if not self.pnet_single_forward:
+      base = 12. / min_size
+      height, width = img.shape[:-1]
+      l = min(width, height)
+      l *= base
+      scales = []
+      while l > 12:
+        scales.append(base)
+        base *= factor
+        l *= factor
+      bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
+      for scale in scales:
+        w, h = int(math.ceil(scale * width)), int(math.ceil(scale * height))
+        data = cv2.resize(img, (w, h))
+        data = data.transpose((2, 0, 1)).astype(np.float32)
+        data = (data - 128) / 128
+        data = data.reshape((1, 3, h, w))
+        prob, bbox_pred, landmark_pred = self._forward(self.pnet, data, ['prob', 'bbox_pred', 'landmark_pred'])
+        _bboxes = self._gen_bbox(prob[0][1], bbox_pred[0], landmark_pred[0], scale, ths[0])
+        keep = nms(_bboxes, 0.5)
+        _bboxes = _bboxes[keep]
+        bboxes = np.vstack([bboxes, _bboxes])
+    else:
+      # convert to a single image
+      data, pyramid_info = convert_image_pyramid(img, min_size=min_size, scale_factor=factor, interval=2)
+      # forward pnet
+      data = data.astype(np.float32)
+      data = (data.transpose((2, 0, 1)) - 128) / 128
+      data = data[np.newaxis, :, :, :]
       prob, bbox_pred, landmark_pred = self._forward(self.pnet, data, ['prob', 'bbox_pred', 'landmark_pred'])
-      _bboxes = self._gen_bbox(prob[0][1], bbox_pred[0], landmark_pred[0], scale, ths[0])
-      keep = nms(_bboxes, 0.5)
-      _bboxes = _bboxes[keep]
-      bboxes = np.vstack([bboxes, _bboxes])
+      bboxes = self._gen_bbox(prob[0][1], bbox_pred[0], landmark_pred[0], 1, ths[0])
+      # nms over every pyramid
+      keep = nms(bboxes, 0.5)
+      bboxes = bboxes[keep]
+      # map to original image
+      bboxes = get_original_bboxes(bboxes, pyramid_info)
     keep = nms(bboxes, 0.7)
     bboxes = bboxes[keep]
     bboxes = self._bbox_reg(bboxes)
@@ -70,7 +91,11 @@ class JfdaDetector:
     data = np.zeros((n, 3, 24, 24), dtype=np.float32)
     for i, bbox in enumerate(bboxes):
       face = crop_face(img, bbox[:4])
-      data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
+      try:
+        data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
+      except:
+        print img.shape, bbox[:4]
+        raise
     data = (data - 128) / 128
     prob, bbox_pred, landmark_pred = self._forward(self.rnet, data, ['prob', 'bbox_pred', 'landmark_pred'])
     keep = prob[:, 1] > ths[1]
@@ -256,3 +281,116 @@ def nms(dets, thresh, meth='Union'):
     order = order[inds + 1]
 
   return keep
+
+
+def convert_image_pyramid(img, min_size=24, scale_factor=0.709, interval=2):
+  """convert image pyramid to a single image
+
+  Parameters
+  ==========
+  img: image
+  min_size: minimum size of pyramid
+  scale_factor: image pyramid scale factor
+  interval: interval pixels between pyramid images
+
+  Returns
+  =======
+  result: image pyramid in a single image
+  bboxes: every pyramid image in the result image with position and scale information,
+          (x, y, w, h, scale)
+  """
+  base = 12. / min_size
+  height, width = img.shape[:2]
+  l = min(width, height)
+  l *= scale_factor
+  scales = []
+  while l > 12:
+    scales.append(base)
+    base *= scale_factor
+    l *= scale_factor
+  pyramids = []
+  for scale in scales:
+    w, h = int(math.ceil(scale*width)), int(math.ceil(scale*height))
+    img_pyramid = cv2.resize(img, (w, h))
+    pyramids.append(img_pyramid)
+
+  input_h, input_w = pyramids[0].shape[:2]
+  # x, y, w, h
+  bboxes = [[0, 0, img.shape[1], img.shape[0], scale] for img, scale in zip(pyramids, scales)]
+  if input_h < input_w:
+    output_h = input_h + interval + pyramids[1].shape[0]
+    output_w = 0
+    available = [[0, 0]]
+    for bbox in bboxes:
+      min_used_width = 3 * width
+      choosed = -1
+      for i, (x, y) in enumerate(available):
+        if y + bbox[3] <= output_h and x + bbox[2] < min_used_width:
+          min_used_width = x + bbox[2]
+          bbox[0], bbox[1] = x, y
+          choosed = i
+      assert choosed != -1, "No suitable position for this pyramid scale"
+      # extend available positions
+      x, y = available[choosed]
+      w, h = bbox[2:4]
+      available[choosed][0] = x + interval + w
+      available[choosed][1] = y
+      available.append([x, y + interval + h])
+      output_w = max(output_w, min_used_width)
+  else:
+    output_w = input_w + interval + pyramids[1].shape[1]
+    output_h = 0
+    available = [[0, 0]]
+    for bbox in bboxes:
+      min_used_height = 3 * height
+      choosed = -1
+      for i, (x, y) in enumerate(available):
+        if x + bbox[2] <= output_w and y + bbox[3] < min_used_height:
+          min_used_height = y + bbox[3]
+          bbox[0], bbox[1] = x, y
+          choosed = i
+      assert choosed != -1, "No suitable position for this pyramid scale"
+      # extend available positions
+      x, y = available[choosed]
+      w, h = bbox[2:4]
+      available[choosed][0] = x + interval + w
+      available[choosed][1] = y
+      available.append([x, y + interval + h])
+      output_h = max(output_h, min_used_height)
+  # convert to a single image
+  result = np.zeros((output_h, output_w, 3), dtype=np.uint8)
+  for bbox, pyramid in zip(bboxes, pyramids):
+    x, y, w, h, scale = bbox
+    assert pyramid.shape[0] == h and pyramid.shape[1] == w
+    result[y:y+h, x:x+w, :] = pyramid
+
+  return result, bboxes
+
+
+def get_original_bboxes(bboxes, pyramid_info):
+  """get original bboxes
+
+  Parameters
+  ==========
+  bboxes: detected bboxes
+  pyramid_info: information of pyramid from `convert_image_pyramid`
+
+  Returns
+  =======
+  bboxes_ori: bboxes in original image
+  """
+  count = 0
+  bboxes_ori = np.zeros((0, bboxes.shape[1]), dtype=np.float32)
+  for x, y, w, h, scale in pyramid_info:
+    x1, y1, x2, y2 = x, y, x+w, y+h
+    idx = np.logical_and(
+            np.logical_and(bboxes[:, 0] >= x1, bboxes[:, 1] >= y1),
+            np.logical_and(bboxes[:, 2] <= x2, bboxes[:, 3] <= y2))
+    bboxes[idx, 0] = (bboxes[idx, 0] - x1) / scale
+    bboxes[idx, 1] = (bboxes[idx, 1] - y1) / scale
+    bboxes[idx, 2] = (bboxes[idx, 2] - x1) / scale
+    bboxes[idx, 3] = (bboxes[idx, 3] - y1) / scale
+    bboxes_ori = np.vstack([bboxes_ori, bboxes[idx]])
+    count += idx.sum()
+  #assert count == len(bboxes), "generate bboxes gives wrong number"
+  return bboxes_ori
