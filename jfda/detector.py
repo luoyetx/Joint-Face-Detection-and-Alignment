@@ -36,16 +36,16 @@ class JfdaDetector:
     bb = [[], [], [], []]
     # stage-1
     timer.tic()
-    if not self.pnet_single_forward:
-      base = 12. / min_size
-      height, width = img.shape[:-1]
-      l = min(width, height)
-      l *= base
-      scales = []
-      while l > 12:
-        scales.append(base)
-        base *= factor
-        l *= factor
+    base = 12. / min_size
+    height, width = img.shape[:-1]
+    l = min(width, height)
+    l *= base
+    scales = []
+    while l > 12:
+      scales.append(base)
+      base *= factor
+      l *= factor
+    if not self.pnet_single_forward or len(scales) <= 1:
       bboxes = np.zeros((0, 4 + 1 + 4 + 10), dtype=np.float32)
       for scale in scales:
         w, h = int(math.ceil(scale * width)), int(math.ceil(scale * height))
@@ -60,7 +60,7 @@ class JfdaDetector:
         bboxes = np.vstack([bboxes, _bboxes])
     else:
       # convert to a single image
-      data, pyramid_info = convert_image_pyramid(img, min_size=min_size, scale_factor=factor, interval=2)
+      data, pyramid_info = convert_image_pyramid(img, scales, interval=2)
       # forward pnet
       data = data.astype(np.float32)
       data = (data.transpose((2, 0, 1)) - 128) / 128
@@ -91,11 +91,7 @@ class JfdaDetector:
     data = np.zeros((n, 3, 24, 24), dtype=np.float32)
     for i, bbox in enumerate(bboxes):
       face = crop_face(img, bbox[:4])
-      try:
-        data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
-      except:
-        print img.shape, bbox[:4]
-        raise
+      data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
     data = (data - 128) / 128
     prob, bbox_pred, landmark_pred = self._forward(self.rnet, data, ['prob', 'bbox_pred', 'landmark_pred'])
     keep = prob[:, 1] > ths[1]
@@ -283,14 +279,13 @@ def nms(dets, thresh, meth='Union'):
   return keep
 
 
-def convert_image_pyramid(img, min_size=24, scale_factor=0.709, interval=2):
+def convert_image_pyramid(img, scales, interval=2):
   """convert image pyramid to a single image
 
   Parameters
   ==========
   img: image
-  min_size: minimum size of pyramid
-  scale_factor: image pyramid scale factor
+  scales: pyramid scales
   interval: interval pixels between pyramid images
 
   Returns
@@ -299,15 +294,8 @@ def convert_image_pyramid(img, min_size=24, scale_factor=0.709, interval=2):
   bboxes: every pyramid image in the result image with position and scale information,
           (x, y, w, h, scale)
   """
-  base = 12. / min_size
+  assert len(scales) >= 2
   height, width = img.shape[:2]
-  l = min(width, height)
-  l *= scale_factor
-  scales = []
-  while l > 12:
-    scales.append(base)
-    base *= scale_factor
-    l *= scale_factor
   pyramids = []
   for scale in scales:
     w, h = int(math.ceil(scale*width)), int(math.ceil(scale*height))
