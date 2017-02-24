@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <caffe/profiler.hpp>
 #include "jfda.hpp"
 
 using namespace cv;
@@ -41,11 +42,15 @@ int main(int argc, char* argv[]) {
 
   Mat img = cv::imread("../../img/test1.jpg", CV_LOAD_IMAGE_COLOR);
 
+  caffe::Profiler *profiler = caffe::Profiler::Get();
+  profiler->TurnON();
   Timer timer;
   timer.Tic();
   detector.SetMinSize(40);
   vector<FaceInfo> faces = detector.Detect(img);
   timer.Toc();
+  profiler->TurnOFF();
+  profiler->DumpProfile("profile.json");
 
   cout << "detect costs " << timer.Elasped() << "ms" << endl;
 

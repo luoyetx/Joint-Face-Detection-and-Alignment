@@ -3,6 +3,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <caffe/profiler.hpp>
 #include "jfda.hpp"
 
 using std::vector;
@@ -265,6 +266,8 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
     l *= factor_;
   }
   vector<FaceInfoInternal> faces;
+  caffe::Profiler *profiler = caffe::Profiler::Get();
+  profiler->ScopeStart("stage1");
   // stage-1
   if (!single_forward || scales.size() <= 1) {
     for (int i = 0; i < scales.size(); i++) {
@@ -365,7 +368,9 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   faces = Nms(faces, 0.7, true);
   BBoxRegression(faces);
   BBoxSquare(faces);
+  profiler->ScopeEnd();
   // stage-2
+  profiler->ScopeStart("stage2");
   int n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
@@ -406,7 +411,9 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   BBoxRegression(faces_stage2);
   BBoxSquare(faces_stage2);
   faces = faces_stage2;
+  profiler->ScopeEnd();
   // stage-3
+  profiler->ScopeStart("stage3");
   n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
@@ -451,7 +458,9 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   BBoxRegression(faces_stage3);
   faces_stage3 = Nms(faces_stage3, 0.7, false);
   faces = faces_stage3;
+  profiler->ScopeEnd();
   // stage-4
+  profiler->ScopeStart("stage4");
   n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
@@ -526,6 +535,7 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
     res.bbox.y = y;
     res.bbox.width = res.bbox.height = static_cast<int>(s);
   }
+  profiler->ScopeEnd();
   return result;
 }
 
