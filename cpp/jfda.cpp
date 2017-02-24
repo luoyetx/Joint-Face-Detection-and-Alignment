@@ -81,11 +81,14 @@ JfdaDetector::JfdaDetector(const string& pnet, const string& pmodel,
                            const string& lnet, const string& lmodel,
                            int gpu_device) {
   if (gpu_device < 0) {
-    caffe::Caffe::set_mode(caffe::Caffe::CPU);
+    caffe::SetMode(caffe::CPU, -1);
+  }
+  else if (caffe::GPUAvailable()) {
+    caffe::SetMode(caffe::GPU, gpu_device);
   }
   else {
-    caffe::Caffe::set_mode(caffe::Caffe::GPU);
-    caffe::Caffe::SetDevice(gpu_device);
+    LOG(WARNING) << "GPU not available, fall back to CPU";
+    caffe::SetMode(caffe::CPU, -1);
   }
   impl_.reset(new Impl);
   impl_->pnet = new caffe::Net(pnet);
