@@ -373,11 +373,11 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   BBoxSquare(faces);
   profiler->ScopeEnd();
   // stage-2
-  profiler->ScopeStart("stage2");
   int n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
   }
+  profiler->ScopeStart("stage2");
   shared_ptr<Blob> input = rnet->blob_by_name("data");
   input->Reshape(n, 3, 24, 24);
   float* input_data = input->mutable_cpu_data();
@@ -416,11 +416,11 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   faces = faces_stage2;
   profiler->ScopeEnd();
   // stage-3
-  profiler->ScopeStart("stage3");
   n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
   }
+  profiler->ScopeStart("stage3");
   input = onet->blob_by_name("data");
   input->Reshape(n, 3, 48, 48);
   input_data = input->mutable_cpu_data();
@@ -463,11 +463,11 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   faces = faces_stage3;
   profiler->ScopeEnd();
   // stage-4
-  profiler->ScopeStart("stage4");
   n = faces.size();
   if (n == 0) {
     return vector<FaceInfo>();
   }
+  profiler->ScopeStart("stage4");
   input = lnet->blob_by_name("data");
   input->Reshape(n, 15, 24, 24);
   input_data = input->mutable_cpu_data();
