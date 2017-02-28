@@ -9,6 +9,7 @@ namespace jfda {
 
 struct FaceInfo {
   cv::Rect bbox;
+  float score;
   std::vector<cv::Point2f> landmark5;
 };
 

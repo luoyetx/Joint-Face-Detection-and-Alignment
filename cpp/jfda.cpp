@@ -64,7 +64,7 @@ public:
 public:
   int min_size_ = 24;
   int max_size_ = -1;
-  float factor_ = 0.7;
+  float factor_ = 0.709;
   float th1_ = 0.6;
   float th2_ = 0.7;
   float th3_ = 0.8;
@@ -102,7 +102,7 @@ JfdaDetector::JfdaDetector(const string& pnet, const string& pmodel,
 }
 
 void JfdaDetector::SetMinSize(int min_size) {
-  if (min_size > 20) {
+  if (min_size > 0) {
     impl_->min_size_ = min_size;
   }
 }
@@ -120,13 +120,13 @@ void JfdaDetector::SetImageScaleFactor(float factor) {
 }
 
 void JfdaDetector::SetStageThresholds(float th1, float th2, float th3) {
-  if (th1 > 0.5 && th1 < 1.) {
+  if (th1 > 0. && th1 < 1.) {
     impl_->th1_ = th1;
   }
-  if (th2 > 0.5 && th2 < 1.) {
+  if (th2 > 0. && th2 < 1.) {
     impl_->th2_ = th2;
   }
-  if (th3 > 0.5 && th3 < 1.) {
+  if (th3 > 0. && th3 < 1.) {
     impl_->th3_ = th3;
   }
 }
@@ -240,7 +240,7 @@ void ConvertImagePyramid(const cv::Mat& img, const std::vector<float>& scales, \
 /*!
  * \brief just for debug, rely on `opencv/highgui` module
  */
-static void debug_faces(const cv::Mat& img, vector<FaceInfoInternal>& faces) {
+static void debug_faces(const cv::Mat& img, vector<FaceInfoInternal>& faces, const char *fn=nullptr) {
   cv::Mat tmp;
   img.copyTo(tmp);
   for (int i = 0; i < faces.size(); i++) {
@@ -248,8 +248,13 @@ static void debug_faces(const cv::Mat& img, vector<FaceInfoInternal>& faces) {
     cv::Rect bbox(face.bbox[0], face.bbox[1], face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]);
     cv::rectangle(tmp, bbox, cv::Scalar(0, 0, 255), 2);
   }
-  cv::imshow("tmp", tmp);
-  cv::waitKey();
+  if (fn == nullptr) {
+    cv::imshow("tmp", tmp);
+    cv::waitKey();
+  }
+  else {
+    cv::imwrite(fn, tmp);
+  }
 }
 
 vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
@@ -508,6 +513,7 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   for (int i = 0; i < n; i++) {
     FaceInfoInternal& face = faces[i];
     FaceInfo& res = result[i];
+    res.score = face.score;
     res.bbox.x = face.bbox[0];
     res.bbox.y = face.bbox[1];
     res.bbox.width = face.bbox[2] - face.bbox[0];
