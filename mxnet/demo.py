@@ -19,6 +19,7 @@ class MxDetector(JfdaDetector):
         self.rnet = mx.model.FeedForward.load(model_dir+'/rnet', 0, ctx=ctx)
         self.onet = mx.model.FeedForward.load(model_dir+'/onet', 0, ctx=ctx)
         self.lnet = mx.model.FeedForward.load(model_dir+'/lnet', 0, ctx=ctx)
+        self.pnet_single_forward = False
 
     def _forward(self, net, data, outs):
         '''forward a net with given data, return blobs[out]
