@@ -1,3 +1,4 @@
+# pylint: disable=bad-indentation, no-member, invalid-name, line-too-long
 import multiprocessing
 import cv2
 import lmdb
