@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   JfdaDetector detector(proto_dir + "p.prototxt", model_dir + "p.caffemodel",
                         proto_dir + "r.prototxt", model_dir + "r.caffemodel",
                         proto_dir + "o.prototxt", model_dir + "o.caffemodel",
-                        proto_dir + "l.prototxt", model_dir + "l.caffemodel");
+                        proto_dir + "l.prototxt", model_dir + "l.caffemodel", 0);
 
   Mat img = cv::imread("../../img/test1.jpg", CV_LOAD_IMAGE_COLOR);
 
