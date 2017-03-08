@@ -56,7 +56,7 @@ ONet 训练时的模型最好能够保证正样本的准确率 > 95.5% 以保证
 
 ### 关于 LNet
 
-LNet 并没有出现在论文中，但是出现在作者公布的模型中，主要是做了 5 个关键点的修正，思路和之前 CUHK 做的 [Cascade CNN](http://mmlab.ie.cuhk.edu.hk/archive/CNN_FacePoint.htm) 思路一致，拿每个点附近的 patch 送到网络去预测点的修正，期望标点误差更低。
+LNet 并没有出现在论文中，但是出现在作者公布的模型中，主要是做了 5 个关键点的修正，思路和之前 CUHK 做的 [Cascade CNN](http://mmlab.ie.cuhk.edu.hk/archive/CNN_FacePoint.htm) 思路一致，拿每个点附近的 patch 送到网络去预测点的修正，期望标点误差更低。训练时最好保证最后模型总的 loss 在 0.016 以下。
 
 ### 各个网络在 fddb 上的性能
 
