@@ -61,9 +61,9 @@ int main(int argc, char* argv[]) {
       cv::circle(img, face.landmark5[j], 2, Scalar(0, 255, 0), -1);
     }
   }
+  cv::imwrite("result.jpg", img);
   cv::imshow("result", img);
   cv::waitKey(0);
-  cv::imwrite("result.jpg", img);
 
   return 0;
 }
