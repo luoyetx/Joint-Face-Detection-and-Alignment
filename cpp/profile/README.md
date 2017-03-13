@@ -1,10 +1,10 @@
 Profile
 =======
 
-- profile-big-lnet-unoptim-caffe.json 使用 5 个分支的 LNet 网络加上未经优化过的 Mini-Caffe
-- profile-big-lnet-optim-caffe.json 使用 5 个分支的 LNet 网络加上经过优化的 Mini-Caffe
-- profile-small-lnet-unoptim-caffe.json 使用单个较小的 LNet 网络加上未经优化的 Mini-Caffe
-- profile-small-lnet-optim-caffe.json 使用dange较小的 LNet 网络加上经过优化的 Mini-Caffe
+- profile-big-lnet-unoptim-caffe.json 使用 5 个分支的 LNet 网络加上未经优化过的 Mini-Caffe，151 ms
+- profile-big-lnet-optim-caffe.json 使用 5 个分支的 LNet 网络加上经过优化的 Mini-Caffe，89 ms
+- profile-small-lnet-unoptim-caffe.json 使用单个较小的 LNet 网络加上未经优化的 Mini-Caffe，130 ms
+- profile-small-lnet-optim-caffe.json 使用dange较小的 LNet 网络加上经过优化的 Mini-Caffe，79 ms
 
 主要针对 Mini-Caffe 优化了 CPU 下的 PReLU Layer 和 Pooling Layer
 
