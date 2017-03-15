@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# pylint: disable=bad-indentation, no-member, invalid-name, line-too-long
 
 import os
 import shutil

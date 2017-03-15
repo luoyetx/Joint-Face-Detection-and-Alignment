@@ -1,0 +1,3 @@
+[submodule "cpp/mini-caffe"]
+	path = cpp/mini-caffe
+	url = https://github.com/luoyetx/mini-caffe.git

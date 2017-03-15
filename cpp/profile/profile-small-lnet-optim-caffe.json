@@ -1,0 +1,2372 @@
+{
+  "traceEvents": [
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 2603,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 2604,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 2605,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 5092,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 5095,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 5437,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 5437,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 6246,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 6249,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 10348,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 10354,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 10506,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 10508,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 13794,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 13797,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 14044,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 14046,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 14181,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 14182,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 14921,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 14923,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 15071,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 15072,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 15299,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 16179,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 16179,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 16180,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 16866,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 16867,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 17039,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 17040,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 17427,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 17427,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 18012,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 18015,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 18080,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 18081,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19019,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 19023,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19142,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 19143,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19202,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 19203,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19535,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 19536,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19609,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 19610,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 19699,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 20146,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 20146,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 20147,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 20477,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 20477,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 20563,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 20563,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 20756,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 20757,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21057,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21058,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21091,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21091,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21504,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21505,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21561,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21561,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21590,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21591,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21747,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21748,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21779,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 21779,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 21823,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22041,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22041,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22041,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22204,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22205,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22247,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22247,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22343,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22344,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22492,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22493,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22509,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22509,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22708,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22710,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22750,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22751,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22773,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22774,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22795,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22796,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22822,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 22823,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 22855,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23049,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23049,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23051,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23172,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23173,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23208,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23209,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23316,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23321,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23642,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23647,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23660,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23661,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23912,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23914,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23929,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23931,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23953,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23955,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23979,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23980,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 23998,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 23999,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24023,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24251,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24252,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24254,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24382,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24384,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24397,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24398,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24435,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24436,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24507,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24508,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24513,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24515,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24658,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24663,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24667,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24670,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24684,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24685,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24700,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24702,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24713,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24714,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24726,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24877,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 24878,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 24879,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25104,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25111,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25215,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25226,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25259,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25260,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25292,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25294,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25297,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25299,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25324,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25325,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25327,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25328,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25333,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25333,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25341,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25342,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25346,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25347,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25353,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1",
+      "cat": "category",
+      "ph": "B",
+      "ts": 2073,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage1",
+      "cat": "category",
+      "ph": "E",
+      "ts": 25400,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 26260,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 26260,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 26260,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 29727,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 29731,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 30840,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 30842,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 35245,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 35248,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 39808,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 39812,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 40663,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 40687,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 42745,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 42753,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 43719,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 43720,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 43774,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 43775,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 43980,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 43981,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 43996,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 43997,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44009,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44010,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44027,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44028,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44037,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44037,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44050,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2",
+      "cat": "category",
+      "ph": "B",
+      "ts": 25400,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage2",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44080,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44575,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 44575,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44575,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 48710,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 48713,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 50281,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 50285,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 57136,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 57157,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 65255,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 65259,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 65926,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 65927,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 68607,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 68608,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 71188,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 71189,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 71283,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 71284,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 71499,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 71500,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72333,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72337,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72370,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72371,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72885,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72888,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72906,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72907,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72924,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Softmax",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72925,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:Softmax",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72940,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72941,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72955,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 72956,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 72975,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3",
+      "cat": "category",
+      "ph": "B",
+      "ts": 44081,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage3",
+      "cat": "category",
+      "ph": "E",
+      "ts": 73048,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Input",
+      "cat": "category",
+      "ph": "B",
+      "ts": 74790,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Input",
+      "cat": "category",
+      "ph": "E",
+      "ts": 74795,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 74804,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 76819,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 76822,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 77157,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 77158,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 78526,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 78527,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 79508,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 79509,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 79621,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Pooling",
+      "cat": "category",
+      "ph": "B",
+      "ts": 79625,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Pooling",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80022,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80023,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Convolution",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80314,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80314,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80342,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80342,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80923,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80924,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80930,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80931,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80958,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80959,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80961,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80961,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80966,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80966,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80990,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80990,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80992,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80993,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 80996,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 80996,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81020,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81020,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81022,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81022,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81028,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81029,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81053,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81054,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81055,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81056,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81058,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81059,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81082,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81083,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:PReLU",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81084,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81085,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:InnerProduct",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81087,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Concat",
+      "cat": "category",
+      "ph": "B",
+      "ts": 81088,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4:Concat",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81091,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4",
+      "cat": "category",
+      "ph": "B",
+      "ts": 73049,
+      "pid": 0,
+      "tid": 0
+    },
+    {
+      "name": "stage4",
+      "cat": "category",
+      "ph": "E",
+      "ts": 81108,
+      "pid": 0,
+      "tid": 0
+    }  ],
+  "displayTimeUnit": "ms"
+}

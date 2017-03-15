@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 import mxnet as mx
 
 
@@ -69,22 +70,17 @@ def onet():
 
 def lnet():
     data = mx.sym.Variable('data')
-    sliced = mx.sym.SliceChannel(data=data, num_outputs=5)
-    out = []
-    for i in range(1, 6):
-        conv1 = mx.sym.Convolution(data=sliced[i-1], kernel=(3, 3), num_filter=28, name='conv1_%d'%i)
-        prelu1 = mx.sym.LeakyReLU(data=conv1, act_type='prelu', name='prelu1_%d'%i)
-        pool1 = mx.sym.Pooling(data=prelu1, kernel=(3, 3), stride=(2, 2), pool_type='max', \
-                               pooling_convention='full', name='pool1_%d'%i)
-        conv2 = mx.sym.Convolution(data=pool1, kernel=(3, 3), num_filter=48, name='conv2_%d'%i)
-        prelu2 = mx.sym.LeakyReLU(data=conv2, act_type='prelu', name='prelu2_%d'%i)
-        pool2 = mx.sym.Pooling(data=prelu2, kernel=(3, 3), stride=(2, 2), pool_type='max', \
-                               pooling_convention='full', name='pool2_%d'%i)
-        conv3 = mx.sym.Convolution(data=pool2, kernel=(2, 2), num_filter=64, name='conv3_%d'%i)
-        prelu3 = mx.sym.LeakyReLU(data=conv3, act_type='prelu', name='prelu3_%d'%i)
-        out.append(prelu3)
-    concat = mx.sym.Concat(*out, name='concat')
-    fc4 = mx.sym.FullyConnected(data=concat, num_hidden=256, name='fc4')
+    conv1 = mx.sym.Convolution(data=data, kernel=(3, 3), num_filter=50, num_group=5, name='conv1')
+    prelu1 = mx.sym.LeakyReLU(data=conv1, act_type='prelu', name='prelu1')
+    pool1 = mx.sym.Pooling(data=prelu1, kernel=(3, 3), stride=(2, 2), pool_type='max', \
+                           pooling_convention='full', name='pool1')
+    conv2 = mx.sym.Convolution(data=pool1, kernel=(3, 3), num_filter=100, num_group=5, name='conv2')
+    prelu2 = mx.sym.LeakyReLU(data=conv2, act_type='prelu', name='prelu2')
+    pool2 = mx.sym.Pooling(data=prelu2, kernel=(3, 3), stride=(2, 2), pool_type='max', \
+                           pooling_convention='full', name='pool2')
+    conv3 = mx.sym.Convolution(data=pool2, kernel=(2, 2), num_filter=200, num_group=5, name='conv3')
+    prelu3 = mx.sym.LeakyReLU(data=conv3, act_type='prelu', name='prelu3')
+    fc4 = mx.sym.FullyConnected(data=prelu3, num_hidden=256, name='fc4')
     prelu4 = mx.sym.LeakyReLU(data=fc4, act_type='prelu', name='prelu4')
     out = []
     for i in range(1, 6):

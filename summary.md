@@ -56,7 +56,7 @@ ONet 训练时的模型最好能够保证正样本的准确率 > 95.5% 以保证
 
 ### 关于 LNet
 
-LNet 并没有出现在论文中，但是出现在作者公布的模型中，主要是做了 5 个关键点的修正，思路和之前 CUHK 做的 [Cascade CNN](http://mmlab.ie.cuhk.edu.hk/archive/CNN_FacePoint.htm) 思路一致，拿每个点附近的 patch 送到网络去预测点的修正，期望标点误差更低。
+LNet 并没有出现在论文中，但是出现在作者公布的模型中，主要是做了 5 个关键点的修正，思路和之前 CUHK 做的 [Cascade CNN](http://mmlab.ie.cuhk.edu.hk/archive/CNN_FacePoint.htm) 思路一致，拿每个点附近的 patch 送到网络去预测点的修正，期望标点误差更低，考虑到各个 patch 来自人脸的不同区域，原作者采用了多个 branch 的子网络来做卷积，然后 concat feature 之后再针对各个点做 regression 训练，这里我们可以采用卷积的 group 参数达到相同的效果，如果不采用 group 而是直接用卷积在各个 patch 上操作，训练效果不好。采用 group 策略原则上跟多个子网络效果类似，但是这样做的好处是网络速度会有明显提升，同时我也压缩了网络的参数，进一步提高 LNet 的速度，用 cpp 代码做了相应的 benchmark，提升速度比较明显。训练时最好保证最后模型总的 loss 在 0.016 以下。
 
 ### 各个网络在 fddb 上的性能
 
