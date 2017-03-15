@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# pylint: disable=no-member
 
 import argparse
 import caffe
