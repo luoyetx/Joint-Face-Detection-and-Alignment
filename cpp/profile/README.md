@@ -16,3 +16,33 @@ Profile
 - stage2:Pooling 从 12.431 ms 降到 6.461 ms
 - stage3:Pooling 从 15.170 ms 降到 9.746 ms
 - stage4:Pooling 从 4.007 ms 降到 1.765 ms
+
+CPU 下 demo.py 的速度测试
+
+利用原始 Caffe 的结果
+
+```
+detect img/test1.jpg costs 1.7810s
+image size = (1200 x 1920), s1: 1.0680s, s2: 0.4980s, s3: 0.1900s, s4: 0.0180
+bboxes, s1: 679, s2: 54, s3: 9, s4: 9
+detect img/test2.jpg costs 5.5220s
+image size = (1412 x 3000), s1: 2.2010s, s2: 1.3010s, s3: 1.8240s, s4: 0.1880
+bboxes, s1: 1886, s2: 496, s3: 114, s4: 114
+detect img/test3.jpg costs 0.7170s
+image size = (778 x 1024), s1: 0.3630s, s2: 0.2670s, s3: 0.0760s, s4: 0.0060
+bboxes, s1: 401, s2: 21, s3: 5, s4: 5
+```
+
+利用 MiniCaffe 的结果
+
+```
+detect img/test1.jpg costs 1.0250s
+image size = (1200 x 1920), s1: 0.6660s, s2: 0.2360s, s3: 0.1100s, s4: 0.0090
+bboxes, s1: 679, s2: 54, s3: 9, s4: 9
+detect img/test2.jpg costs 3.1460s
+image size = (1412 x 3000), s1: 1.3690s, s2: 0.6740s, s3: 1.0030s, s4: 0.0960
+bboxes, s1: 1886, s2: 496, s3: 114, s4: 114
+detect img/test3.jpg costs 0.3730s
+image size = (778 x 1024), s1: 0.1960s, s2: 0.1270s, s3: 0.0400s, s4: 0.0050
+bboxes, s1: 401, s2: 21, s3: 5, s4: 5
+```
