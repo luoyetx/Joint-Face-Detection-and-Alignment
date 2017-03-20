@@ -90,7 +90,7 @@ def convert(net_type, args):
         raise ValueError("No such net type (%s)"%net_type)
 
     arg_params = get_params(caffe_net.params)
-    mx_mod = mx.mod.Module(symbol=mx_net, data_names=('data'), label_names=None)
+    mx_mod = mx.mod.Module(symbol=mx_net, data_names=('data',), label_names=None)
     mx_mod.bind(data_shapes=[('data', (100, input_channel, input_size, input_size)),])
     mx_mod.set_params(arg_params=arg_params, aux_params=None, allow_missing=True)
     mx.model.save_checkpoint(mode_prefix, 0, mx_net, arg_params, {})
