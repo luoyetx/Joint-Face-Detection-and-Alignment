@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.7
+# pylint: disable=bad-indentation, no-member, invalid-name, line-too-long
 
 import os
 import argparse
@@ -12,7 +13,11 @@ def main(args):
          'proto/r.prototxt', 'model/r.caffemodel',
          'proto/o.prototxt', 'model/o.caffemodel',
          'proto/l.prototxt', 'model/l.caffemodel',]
-  detector = JfdaDetector(net)
+  if args.minicaffe:
+    from jfda.mdetector import MiniCaffeDetector
+    detector = MiniCaffeDetector(net)
+  else:
+    detector = JfdaDetector(net)
   if args.pnet_single:
     detector.set_pnet_single_forward(True)
   param = {
@@ -63,6 +68,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--gpu', type=int, default=-1, help='gpu id to use, -1 for cpu')
   parser.add_argument('--pnet-single', action='store_true', help='pnet use single forward')
+  parser.add_argument('--minicaffe', action='store_true', help='use minicaffe')
   args = parser.parse_args()
 
   if args.gpu >= 0:
