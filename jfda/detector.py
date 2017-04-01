@@ -95,6 +95,9 @@ class JfdaDetector:
       data[i] = cv2.resize(face, (24, 24)).transpose((2, 0, 1))
     data = (data - 128) / 128
     prob, bbox_pred, landmark_pred = self._forward(self.rnet, data, ['prob', 'bbox_pred', 'landmark_pred'])
+    prob = prob.reshape(n, 2)
+    bbox_pred = bbox_pred.reshape(n, 4)
+    landmark_pred = landmark_pred.reshape(n, 10)
     keep = prob[:, 1] > ths[1]
     bboxes = bboxes[keep]
     bboxes[:, 4] = prob[keep, 1]
@@ -122,6 +125,9 @@ class JfdaDetector:
       data[i] = cv2.resize(face, (48, 48)).transpose((2, 0, 1))
     data = (data - 128) / 128
     prob, bbox_pred, landmark_pred = self._forward(self.onet, data, ['prob', 'bbox_pred', 'landmark_pred'])
+    prob = prob.reshape(n, 2)
+    bbox_pred = bbox_pred.reshape(n, 4)
+    landmark_pred = landmark_pred.reshape(n, 10)
     keep = prob[:, 1] > ths[2]
     bboxes = bboxes[keep]
     bboxes[:, 4] = prob[keep, 1]
@@ -158,6 +164,7 @@ class JfdaDetector:
         data[i, (3*j):(3*j+3)] = patch
     data = (data - 128) / 128
     offset = self._forward(self.lnet, data, ['landmark_offset'])[0]
+    offset = offset.reshape(n, 10)
     offset *= l.reshape((-1, 1))
     bboxes[:, 9:] += offset
     timer.toc()
