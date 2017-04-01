@@ -163,10 +163,10 @@ layer {
   top: "conv3"
 }
 layer {
-  name: "fc4"
-  type: "InnerProduct"
+  name: "conv4"
+  type: "Convolution"
   bottom: "conv3"
-  top: "fc4"
+  top: "conv4"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -175,8 +175,11 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
-  inner_product_param {
-    num_output: 256
+  convolution_param {
+    num_output: 100
+    group: 5
+    kernel_size: 3
+    stride: 3
     weight_filler {
       type: "xavier"
     }
@@ -188,306 +191,134 @@ layer {
 layer {
   name: "prelu4"
   type: "PReLU"
-  bottom: "fc4"
-  top: "fc4"
+  bottom: "conv4"
+  top: "conv4"
+}
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 50
+    group: 5
+    kernel_size: 1
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "prelu5"
+  type: "PReLU"
+  bottom: "conv5"
+  top: "conv5"
+}
+layer {
+  name: "conv6"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "conv6"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 10
+    group: 5
+    kernel_size: 1
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "landmark"
+  type: "Reshape"
+  bottom: "conv6"
+  top: "landmark"
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 10
+    }
+  }
+}
+######## slice output ########
+layer {
+  name: "landmark_slice"
+  type: "Slice"
+  bottom: "landmark"
+  top: "landmark_1"
+  top: "landmark_2"
+  top: "landmark_3"
+  top: "landmark_4"
+  top: "landmark_5"
+  slice_param {
+    axis: 1
+    slice_point: 2
+    slice_point: 4
+    slice_point: 6
+    slice_point: 8
+  }
 }
 ######## net-1 output ########
 layer {
-  name: "fc5_1"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_1"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "prelu5_1"
-  type: "PReLU"
-  bottom: "fc5_1"
-  top: "fc5_1"
-}
-layer {
-  name: "fc6_1"
-  type: "InnerProduct"
-  bottom: "fc5_1"
-  top: "fc6_1"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
   name: "loss_1"
   type: "EuclideanLoss"
-  bottom: "fc6_1"
+  bottom: "landmark_1"
   bottom: "target_1"
   top: "loss_1"
 }
 ######## net-2 output ########
 layer {
-  name: "fc5_2"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_2"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "prelu5_2"
-  type: "PReLU"
-  bottom: "fc5_2"
-  top: "fc5_2"
-}
-layer {
-  name: "fc6_2"
-  type: "InnerProduct"
-  bottom: "fc5_2"
-  top: "fc6_2"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
   name: "loss_2"
   type: "EuclideanLoss"
-  bottom: "fc6_2"
+  bottom: "landmark_2"
   bottom: "target_2"
   top: "loss_2"
 }
 ######## net-3 output ########
 layer {
-  name: "fc5_3"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_3"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "prelu5_3"
-  type: "PReLU"
-  bottom: "fc5_3"
-  top: "fc5_3"
-}
-layer {
-  name: "fc6_3"
-  type: "InnerProduct"
-  bottom: "fc5_3"
-  top: "fc6_3"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
   name: "loss_3"
   type: "EuclideanLoss"
-  bottom: "fc6_3"
+  bottom: "landmark_3"
   bottom: "target_3"
   top: "loss_3"
 }
 ######## net-4 output ########
 layer {
-  name: "fc5_4"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_4"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "prelu5_4"
-  type: "PReLU"
-  bottom: "fc5_4"
-  top: "fc5_4"
-}
-layer {
-  name: "fc6_4"
-  type: "InnerProduct"
-  bottom: "fc5_4"
-  top: "fc6_4"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
   name: "loss_4"
   type: "EuclideanLoss"
-  bottom: "fc6_4"
+  bottom: "landmark_4"
   bottom: "target_4"
   top: "loss_4"
 }
 ######## net-5 output ########
 layer {
-  name: "fc5_5"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_5"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "prelu5_5"
-  type: "PReLU"
-  bottom: "fc5_5"
-  top: "fc5_5"
-}
-layer {
-  name: "fc6_5"
-  type: "InnerProduct"
-  bottom: "fc5_5"
-  top: "fc6_5"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
-    num_output: 2
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
   name: "loss_5"
   type: "EuclideanLoss"
-  bottom: "fc6_5"
+  bottom: "landmark_5"
   bottom: "target_5"
   top: "loss_5"
 }

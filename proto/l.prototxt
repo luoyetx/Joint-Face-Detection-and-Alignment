@@ -91,157 +91,62 @@ layer {
   top: "conv3"
 }
 layer {
-  name: "fc4"
-  type: "InnerProduct"
+  name: "conv4"
+  type: "Convolution"
   bottom: "conv3"
-  top: "fc4"
-  inner_product_param {
-    num_output: 256
+  top: "conv4"
+  convolution_param {
+    num_output: 100
+    group: 5
+    kernel_size: 3
+    stride: 3
   }
 }
 layer {
   name: "prelu4"
   type: "PReLU"
-  bottom: "fc4"
-  top: "fc4"
+  bottom: "conv4"
+  top: "conv4"
 }
-######## net-1 output ########
 layer {
-  name: "fc5_1"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_1"
-  inner_product_param {
-    num_output: 64
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  convolution_param {
+    num_output: 50
+    group: 5
+    kernel_size: 1
+    stride: 1
   }
 }
 layer {
-  name: "prelu5_1"
+  name: "prelu5"
   type: "PReLU"
-  bottom: "fc5_1"
-  top: "fc5_1"
+  bottom: "conv5"
+  top: "conv5"
 }
 layer {
-  name: "fc6_1"
-  type: "InnerProduct"
-  bottom: "fc5_1"
-  top: "fc6_1"
-  inner_product_param {
-    num_output: 2
-  }
-}
-######## net-2 output ########
-layer {
-  name: "fc5_2"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_2"
-  inner_product_param {
-    num_output: 64
+  name: "conv6"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "conv6"
+  convolution_param {
+    num_output: 10
+    group: 5
+    kernel_size: 1
+    stride: 1
   }
 }
 layer {
-  name: "prelu5_2"
-  type: "PReLU"
-  bottom: "fc5_2"
-  top: "fc5_2"
-}
-layer {
-  name: "fc6_2"
-  type: "InnerProduct"
-  bottom: "fc5_2"
-  top: "fc6_2"
-  inner_product_param {
-    num_output: 2
-  }
-}
-######## net-3 output ########
-layer {
-  name: "fc5_3"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_3"
-  inner_product_param {
-    num_output: 64
-  }
-}
-layer {
-  name: "prelu5_3"
-  type: "PReLU"
-  bottom: "fc5_3"
-  top: "fc5_3"
-}
-layer {
-  name: "fc6_3"
-  type: "InnerProduct"
-  bottom: "fc5_3"
-  top: "fc6_3"
-  inner_product_param {
-    num_output: 2
-  }
-}
-######## net-4 output ########
-layer {
-  name: "fc5_4"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_4"
-  inner_product_param {
-    num_output: 64
-  }
-}
-layer {
-  name: "prelu5_4"
-  type: "PReLU"
-  bottom: "fc5_4"
-  top: "fc5_4"
-}
-layer {
-  name: "fc6_4"
-  type: "InnerProduct"
-  bottom: "fc5_4"
-  top: "fc6_4"
-  inner_product_param {
-    num_output: 2
-  }
-}
-######## net-5 output ########
-layer {
-  name: "fc5_5"
-  type: "InnerProduct"
-  bottom: "fc4"
-  top: "fc5_5"
-  inner_product_param {
-    num_output: 64
-  }
-}
-layer {
-  name: "prelu5_5"
-  type: "PReLU"
-  bottom: "fc5_5"
-  top: "fc5_5"
-}
-layer {
-  name: "fc6_5"
-  type: "InnerProduct"
-  bottom: "fc5_5"
-  top: "fc6_5"
-  inner_product_param {
-    num_output: 2
-  }
-}
-
-######## final output ########
-layer {
-  name: "landmark_offset"
-  type: "Concat"
-  bottom: "fc6_1"
-  bottom: "fc6_2"
-  bottom: "fc6_3"
-  bottom: "fc6_4"
-  bottom: "fc6_5"
+  name: "landmark"
+  type: "Reshape"
+  bottom: "conv6"
   top: "landmark_offset"
-  concat_param {
-    axis: 1
+  reshape_param {
+    shape {
+      dim: 0
+      dim: 10
+    }
   }
 }
