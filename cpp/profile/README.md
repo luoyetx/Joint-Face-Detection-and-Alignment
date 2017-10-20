@@ -46,3 +46,7 @@ detect img/test3.jpg costs 0.3730s
 image size = (778 x 1024), s1: 0.1960s, s2: 0.1270s, s3: 0.0400s, s4: 0.0050
 bboxes, s1: 401, s2: 21, s3: 5, s4: 5
 ```
+
+### Update
+
+LNet 利用卷积替换掉全连接，在保证精度不变的情况下，提高了速度。GTX 1070 上从 17.59ms 降到了 13.907ms。
