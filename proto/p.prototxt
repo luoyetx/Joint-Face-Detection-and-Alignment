@@ -111,15 +111,15 @@ layer {
     stride: 1
   }
 }
-# landmark
-layer {
-  name: "landmark_pred"
-  type: "Convolution"
-  bottom: "conv3"
-  top: "landmark_pred"
-  convolution_param {
-    num_output: 10
-    kernel_size: 1
-    stride: 1
-  }
-}
+## landmark
+#layer {
+#  name: "landmark_pred"
+#  type: "Convolution"
+#  bottom: "conv3"
+#  top: "landmark_pred"
+#  convolution_param {
+#    num_output: 10
+#    kernel_size: 1
+#    stride: 1
+#  }
+#}

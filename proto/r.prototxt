@@ -131,13 +131,13 @@ layer {
     num_output: 4
   }
 }
-# landmark
-layer {
-  name: "landmark_pred"
-  type: "InnerProduct"
-  bottom: "fc"
-  top: "landmark_pred"
-  inner_product_param {
-    num_output: 10
-  }
-}
+## landmark
+#layer {
+#  name: "landmark_pred"
+#  type: "InnerProduct"
+#  bottom: "fc"
+#  top: "landmark_pred"
+#  inner_product_param {
+#    num_output: 10
+#  }
+#}
