@@ -1,4 +1,5 @@
 #include <iostream>
+#include <functional>
 #include <caffe/net.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -257,6 +258,19 @@ static void debug_faces(const cv::Mat& img, vector<FaceInfoInternal>& faces, con
   }
 }
 
+void BatchSplit(caffe::Net* net, int n, int num_per_batch,
+                std::function<void(int)> preprocess,
+                std::function<void(int)> postprocess) {
+  int num = n / num_per_batch;
+  if (n%num_per_batch != 0) num++;
+
+  for (int i = 0; i < num; i++) {
+    preprocess(i);
+    net->Forward();
+    postprocess(i);
+  }
+}
+
 vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
   float base = 12.f / min_size_;
   int height = img.rows;
@@ -383,38 +397,51 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
     return vector<FaceInfo>();
   }
   profiler->ScopeStart("stage2");
-  shared_ptr<Blob> input = rnet->blob_by_name("data");
-  input->Reshape(n, 3, 24, 24);
-  float* input_data = input->mutable_cpu_data();
-  for (int i = 0; i < n; i++) {
-    FaceInfoInternal& face = faces[i];
-    cv::Rect bbox(face.bbox[0], face.bbox[1], face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]);
-    cv::Mat patch = CropPatch(img, bbox);
-    cv::resize(patch, patch, cv::Size(24, 24));
-    vector<cv::Mat> bgr;
-    cv::split(patch, bgr);
-    bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
-    bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
-    bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
-    const int bytes = input->offset(0, 1)*sizeof(float);
-    memcpy(input_data + input->offset(i, 0), bgr[0].data, bytes);
-    memcpy(input_data + input->offset(i, 1), bgr[1].data, bytes);
-    memcpy(input_data + input->offset(i, 2), bgr[2].data, bytes);
-  }
-  rnet->Forward();
-  shared_ptr<Blob> prob = rnet->blob_by_name("prob");
-  shared_ptr<Blob> bbox_offset = rnet->blob_by_name("bbox_pred");
   vector<FaceInfoInternal> faces_stage2;
-  for (int i = 0; i < n; i++) {
-    if (prob->data_at(i, 1, 0, 0) > th2_) {
-      FaceInfoInternal face = faces[i];
-      face.score = prob->data_at(i, 1, 0, 0);
-      for (int j = 0; j < 4; j++) {
-        face.offset[j] = bbox_offset->data_at(i, j, 0, 0);
+  int num_per_batch = 512;
+  BatchSplit(rnet, n, num_per_batch,
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> input = rnet->blob_by_name("data");
+      input->Reshape(num_valid, 3, 24, 24);
+      float* input_data = input->mutable_cpu_data();
+      for (int i = begin; i < end; i++) {
+        FaceInfoInternal& face = faces[i];
+        cv::Rect bbox(face.bbox[0], face.bbox[1], face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]);
+        cv::Mat patch = CropPatch(img, bbox);
+        cv::resize(patch, patch, cv::Size(24, 24));
+        vector<cv::Mat> bgr;
+        cv::split(patch, bgr);
+        bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
+        bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
+        bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
+        const int bytes = input->offset(0, 1)*sizeof(float);
+        memcpy(input_data + input->offset(i - begin, 0), bgr[0].data, bytes);
+        memcpy(input_data + input->offset(i - begin, 1), bgr[1].data, bytes);
+        memcpy(input_data + input->offset(i - begin, 2), bgr[2].data, bytes);
       }
-      faces_stage2.push_back(face);
-    }
-  }
+    },
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> prob = rnet->blob_by_name("prob");
+      shared_ptr<Blob> bbox_offset = rnet->blob_by_name("bbox_pred");
+      for (int i = begin; i < end; i++) {
+        if (prob->data_at(i - begin, 1, 0, 0) > th2_) {
+          FaceInfoInternal face = faces[i];
+          face.score = prob->data_at(i - begin, 1, 0, 0);
+          for (int j = 0; j < 4; j++) {
+            face.offset[j] = bbox_offset->data_at(i - begin, j, 0, 0);
+          }
+          faces_stage2.push_back(face);
+        }
+      }
+    });
   faces_stage2 = Nms(faces_stage2, 0.7);
   BBoxRegression(faces_stage2);
   BBoxSquare(faces_stage2);
@@ -426,42 +453,55 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
     return vector<FaceInfo>();
   }
   profiler->ScopeStart("stage3");
-  input = onet->blob_by_name("data");
-  input->Reshape(n, 3, 48, 48);
-  input_data = input->mutable_cpu_data();
-  for (int i = 0; i < n; i++) {
-    FaceInfoInternal& face = faces[i];
-    cv::Rect bbox(face.bbox[0], face.bbox[1], face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]);
-    cv::Mat patch = CropPatch(img, bbox);
-    cv::resize(patch, patch, cv::Size(48, 48));
-    vector<cv::Mat> bgr;
-    cv::split(patch, bgr);
-    bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
-    bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
-    bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
-    const int bytes = input->offset(0, 1)*sizeof(float);
-    memcpy(input_data + input->offset(i, 0), bgr[0].data, bytes);
-    memcpy(input_data + input->offset(i, 1), bgr[1].data, bytes);
-    memcpy(input_data + input->offset(i, 2), bgr[2].data, bytes);
-  }
-  onet->Forward();
-  prob = onet->blob_by_name("prob");
-  bbox_offset = onet->blob_by_name("bbox_pred");
-  shared_ptr<Blob> landmark = onet->blob_by_name("landmark_pred");
   vector<FaceInfoInternal> faces_stage3;
-  for (int i = 0; i < n; i++) {
-    if (prob->data_at(i, 1, 0, 0) > th3_) {
-      FaceInfoInternal face = faces[i];
-      face.score = prob->data_at(i, 1, 0, 0);
-      for (int j = 0; j < 4; j++) {
-        face.offset[j] = bbox_offset->data_at(i, j, 0, 0);
+  num_per_batch = 128;
+  BatchSplit(onet, n, num_per_batch,
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> input = onet->blob_by_name("data");
+      input->Reshape(num_valid, 3, 48, 48);
+      float* input_data = input->mutable_cpu_data();
+      for (int i = begin; i < end; i++) {
+        FaceInfoInternal& face = faces[i];
+        cv::Rect bbox(face.bbox[0], face.bbox[1], face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]);
+        cv::Mat patch = CropPatch(img, bbox);
+        cv::resize(patch, patch, cv::Size(48, 48));
+        vector<cv::Mat> bgr;
+        cv::split(patch, bgr);
+        bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
+        bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
+        bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
+        const int bytes = input->offset(0, 1)*sizeof(float);
+        memcpy(input_data + input->offset(i - begin, 0), bgr[0].data, bytes);
+        memcpy(input_data + input->offset(i - begin, 1), bgr[1].data, bytes);
+        memcpy(input_data + input->offset(i - begin, 2), bgr[2].data, bytes);
       }
-      for (int j = 0; j < 10; j++) {
-        face.landmark[j] = landmark->data_at(i, j, 0, 0);
+    },
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> prob = onet->blob_by_name("prob");
+      shared_ptr<Blob> bbox_offset = onet->blob_by_name("bbox_pred");
+      shared_ptr<Blob> landmark = onet->blob_by_name("landmark_pred");
+      for (int i = begin; i < end; i++) {
+        if (prob->data_at(i - begin, 1, 0, 0) > th3_) {
+          FaceInfoInternal face = faces[i];
+          face.score = prob->data_at(i - begin, 1, 0, 0);
+          for (int j = 0; j < 4; j++) {
+            face.offset[j] = bbox_offset->data_at(i - begin, j, 0, 0);
+          }
+          for (int j = 0; j < 10; j++) {
+            face.landmark[j] = landmark->data_at(i - begin, j, 0, 0);
+          }
+          faces_stage3.push_back(face);
+        }
       }
-      faces_stage3.push_back(face);
-    }
-  }
+    });
   LocateLandmark(faces_stage3);
   BBoxRegression(faces_stage3);
   faces_stage3 = Nms(faces_stage3, 0.7, false);
@@ -473,40 +513,53 @@ vector<FaceInfo> JfdaDetector::Impl::Detect(const cv::Mat& img) {
     return vector<FaceInfo>();
   }
   profiler->ScopeStart("stage4");
-  input = lnet->blob_by_name("data");
-  input->Reshape(n, 15, 24, 24);
-  input_data = input->mutable_cpu_data();
-  for (int i = 0; i < n; i++) {
-    FaceInfoInternal& face = faces[i];
-    float* landmark = face.landmark;
-    int l = static_cast<int>(std::max(face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]) * 0.25f);
-    // every landmark patch
-    for (int j = 0; j < 5; j++) {
-      float x = landmark[2 * j];
-      float y = landmark[2 * j + 1];
-      cv::Rect patch_bbox(x - l / 2, y - l / 2, l, l);
-      cv::Mat patch = CropPatch(img, patch_bbox);
-      cv::resize(patch, patch, cv::Size(24, 24));
-      vector<cv::Mat> bgr;
-      cv::split(patch, bgr);
-      bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
-      bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
-      bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
-      const int bytes = input->offset(0, 1)*sizeof(float);
-      memcpy(input_data + input->offset(i, 3 * j + 0), bgr[0].data, bytes);
-      memcpy(input_data + input->offset(i, 3 * j + 1), bgr[1].data, bytes);
-      memcpy(input_data + input->offset(i, 3 * j + 2), bgr[2].data, bytes);
-    }
-  }
-  lnet->Forward();
-  shared_ptr<Blob> landmark_offset = lnet->blob_by_name("landmark_offset");
-  for (int i = 0; i < n; i++) {
-    FaceInfoInternal& face = faces[i];
-    int l = static_cast<int>(std::max(face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]) * 0.25f);
-    for (int j = 0; j < 10; j++) {
-      face.landmark[j] += landmark_offset->data_at(i, j, 0, 0) * l;
-    }
-  }
+  num_per_batch = 128;
+  BatchSplit(lnet, n, num_per_batch,
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> input = lnet->blob_by_name("data");
+      input->Reshape(num_valid, 15, 24, 24);
+      float* input_data = input->mutable_cpu_data();
+      for (int i = begin; i < end; i++) {
+        FaceInfoInternal& face = faces[i];
+        float* landmark = face.landmark;
+        int l = static_cast<int>(std::max(face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]) * 0.25f);
+        // every landmark patch
+        for (int j = 0; j < 5; j++) {
+          float x = landmark[2 * j];
+          float y = landmark[2 * j + 1];
+          cv::Rect patch_bbox(x - l / 2, y - l / 2, l, l);
+          cv::Mat patch = CropPatch(img, patch_bbox);
+          cv::resize(patch, patch, cv::Size(24, 24));
+          vector<cv::Mat> bgr;
+          cv::split(patch, bgr);
+          bgr[0].convertTo(bgr[0], CV_32F, 1.f / 128.f, -1.f);
+          bgr[1].convertTo(bgr[1], CV_32F, 1.f / 128.f, -1.f);
+          bgr[2].convertTo(bgr[2], CV_32F, 1.f / 128.f, -1.f);
+          const int bytes = input->offset(0, 1)*sizeof(float);
+          memcpy(input_data + input->offset(i - begin, 3 * j + 0), bgr[0].data, bytes);
+          memcpy(input_data + input->offset(i - begin, 3 * j + 1), bgr[1].data, bytes);
+          memcpy(input_data + input->offset(i - begin, 3 * j + 2), bgr[2].data, bytes);
+        }
+      }
+    },
+    [&](int idx) {
+      int begin = idx * num_per_batch;
+      int end = (idx + 1) * num_per_batch;
+      end = std::min(end, n);
+      int num_valid = end - begin;
+      shared_ptr<Blob> landmark_offset = lnet->blob_by_name("landmark_offset");
+      for (int i = begin; i < end; i++) {
+        FaceInfoInternal& face = faces[i];
+        int l = static_cast<int>(std::max(face.bbox[2] - face.bbox[0], face.bbox[3] - face.bbox[1]) * 0.25f);
+        for (int j = 0; j < 10; j++) {
+          face.landmark[j] += landmark_offset->data_at(i - begin, j, 0, 0) * l;
+        }
+      }
+    });
   // output
   n = faces.size();
   vector<FaceInfo> result(n);
