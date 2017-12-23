@@ -80,15 +80,12 @@ def lnet():
                            pooling_convention='full', name='pool2')
     conv3 = mx.sym.Convolution(data=pool2, kernel=(2, 2), num_filter=200, num_group=5, name='conv3')
     prelu3 = mx.sym.LeakyReLU(data=conv3, act_type='prelu', name='prelu3')
-    fc4 = mx.sym.FullyConnected(data=prelu3, num_hidden=256, name='fc4')
-    prelu4 = mx.sym.LeakyReLU(data=fc4, act_type='prelu', name='prelu4')
-    out = []
-    for i in range(1, 6):
-        fc5 = mx.sym.FullyConnected(data=prelu4, num_hidden=64, name='fc5_%d'%i)
-        prelu5 = mx.sym.LeakyReLU(data=fc5, act_type='prelu', name='prelu5_%d'%i)
-        fc6 = mx.sym.FullyConnected(data=prelu5, num_hidden=2, name='fc6_%d'%i)
-        out.append(fc6)
-    out = mx.sym.Concat(*out, name='landmark_offset')
+    conv4 = mx.sym.Convolution(data=prelu3, kernel=(3, 3), stride=(3, 3), num_filter=100, num_group=5, name='conv4')
+    prelu4 = mx.sym.LeakyReLU(data=conv4, act_type='prelu', name='prelu4')
+    conv5 = mx.sym.Convolution(data=prelu4, kernel=(1, 1), num_filter=50, num_group=5, name='conv5')
+    prelu5 = mx.sym.LeakyReLU(data=conv5, act_type='prelu', name='prelu5')
+    conv6 = mx.sym.Convolution(data=prelu5, kernel=(1, 1), num_filter=10, num_group=5, name='conv6')
+    out = mx.sym.Reshape(conv6, shape=(-1, 10))
     return out
 
 
