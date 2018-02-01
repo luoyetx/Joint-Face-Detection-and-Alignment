@@ -11,7 +11,7 @@ import h5py
 import caffe
 import numpy as np
 from caffe.proto import caffe_pb2
-import google.protobuf as pb2
+from google.protobuf import text_format
 from jfda.config import cfg
 from jfda.utils import load_celeba, get_logger, crop_face
 
@@ -191,7 +191,7 @@ def train(args):
   final_model = 'tmp/lnet_iter_%d.caffemodel'%max_iter
   solver_param = caffe_pb2.SolverParameter()
   with open('proto/l_solver.prototxt', 'r') as fin:
-    pb2.text_format.Merge(fin.read(), solver_param)
+    text_format.Merge(fin.read(), solver_param)
   solver_param.max_iter = max_iter
   solver_param.snapshot = iter_train
   solver_param.test_interval = iter_train
@@ -201,7 +201,7 @@ def train(args):
   solver_param.stepsize = args.lrp * iter_train
   tmp_solver_prototxt = 'tmp/l_solver.prototxt'
   with open(tmp_solver_prototxt, 'w') as fout:
-    fout.write(pb2.text_format.MessageToString(solver_param))
+    fout.write(text_format.MessageToString(solver_param))
   # solver setup
   solver = caffe.SGDSolver(tmp_solver_prototxt)
   # train

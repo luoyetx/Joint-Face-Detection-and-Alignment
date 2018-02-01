@@ -97,5 +97,4 @@ if __name__ == '__main__':
     mx.viz.plot_network(p, shape={'data': (1, 3, 12, 12)}).render('tmp/pnet')
     mx.viz.plot_network(r, shape={'data': (1, 3, 24, 24)}).render('tmp/rnet')
     mx.viz.plot_network(o, shape={'data': (1, 3, 48, 48)}).render('tmp/onet')
-    # mx.viz doesn't support multi-output from an op
-    #mx.viz.plot_network(l, shape={'data': (1, 15, 24, 24)}).render('tmp/lnet')
+    mx.viz.plot_network(l, shape={'data': (1, 15, 24, 24)}).render('tmp/lnet')

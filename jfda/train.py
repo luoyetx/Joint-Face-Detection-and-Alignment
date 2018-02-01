@@ -7,7 +7,7 @@ import multiprocessing
 import numpy as np
 import caffe
 from caffe.proto import caffe_pb2
-import google.protobuf as pb2
+from google.protobuf import text_format
 from jfda.config import cfg
 from jfda.minibatch import MiniBatcher
 
@@ -45,7 +45,7 @@ class Solver:
     self.final_model = 'tmp/%snet_iter_%d.caffemodel'%(net_type, max_iter)
     solver_param = caffe_pb2.SolverParameter()
     with open(solver_prototxt, 'r') as fin:
-      pb2.text_format.Merge(fin.read(), solver_param)
+      text_format.Merge(fin.read(), solver_param)
     solver_param.max_iter = max_iter  # max training iterations
     solver_param.snapshot = iter_train  # save after an epoch
     solver_param.test_interval = iter_train
@@ -56,7 +56,7 @@ class Solver:
     solver_param.weight_decay = args.wd
     tmp_solver_prototxt = 'tmp/%s_solver.prototxt'%net_type
     with open(tmp_solver_prototxt, 'w') as fout:
-      fout.write(pb2.text_format.MessageToString(solver_param))
+      fout.write(text_format.MessageToString(solver_param))
     # solver setup
     self.solver = caffe.SGDSolver(tmp_solver_prototxt)
     # data layer setup
