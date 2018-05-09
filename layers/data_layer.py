@@ -40,7 +40,7 @@ class FaceDataLayer(caffe.Layer):
     self.net_input_size = cfg.NET_INPUT_SIZE[cfg.NET_TYPE]
 
   def set_data_queue(self, queue):
-    '''the queue should put a minibatch with size of (positives, negatives, part faces, landmark faces) =
+    '''the queue should put a minibatch with size of (negatives, positives, part faces, landmark faces) =
     (n1, n2, n3, n4) in a dict
     '''
     self.data_queue = queue

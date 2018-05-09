@@ -8,7 +8,7 @@ from jfda.config import cfg
 
 class MiniBatcher(multiprocessing.Process):
   '''generate minibatch
-  given a queue, put (positives, negatives, part faces, landmark faces) = (n1, n2, n3, n4)
+  given a queue, put (negatives, positives, part faces, landmark faces) = (n1, n2, n3, n4)
   '''
 
   def __init__(self, db_names, ns, net_type):
